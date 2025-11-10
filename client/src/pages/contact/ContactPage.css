@@ -1,0 +1,205 @@
+.contact-page {
+  min-height: 100vh;
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+  padding: 60px 20px;
+  font-family: "Poppins", sans-serif;
+}
+
+.yellow-circle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: -1;
+}
+
+.circle1 {
+  width: 350px;
+  height: 350px;
+  background: #fef3c7;
+  top: 120px;
+  right: -180px;
+}
+
+.circle2 {
+  width: 350px;
+  height: 350px;
+  background: rgba(254, 240, 138, 0.7);
+  bottom: 120px;
+  left: -180px;
+}
+
+/* CONTAINER */
+.contact-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* HEADER */
+.contact-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.contact-header h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 15px;
+}
+
+.contact-header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* GRID LAYOUT */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+}
+
+@media (max-width: 900px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* LEFT INFO */
+.contact-info h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #222;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 25px;
+}
+
+.icon {
+  width: 50px;
+  height: 50px;
+  background: #fef3c7;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 15px;
+  font-size: 1.5rem;
+}
+
+.info-item h3 {
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+  color: #111;
+}
+
+.info-item p {
+  color: #555;
+  line-height: 1.6;
+}
+
+.small-text {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+/* RIGHT FORM */
+.contact-form {
+  background: #fff;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.contact-form h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #222;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 5px rgba(251, 191, 36, 0.3);
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: #fbbf24;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.submit-btn:hover {
+  background: #f59e0b;
+  transform: translateY(-2px);
+}
+
+/* MAP SECTION */
+.find-us {
+  margin-top: 70px;
+  text-align: center;
+}
+
+.find-us h2 {
+  font-size: 2rem;
+  margin-bottom: 25px;
+  color: #222;
+}
+
+.map-placeholder {
+  background: #f3f4f6;
+  border-radius: 12px;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 1.1rem;
+}

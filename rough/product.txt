@@ -1,0 +1,2096 @@
+// // import React, { useEffect, useState, useRef } from "react";
+// // import {
+// //   createProduct,
+// //   uploadProductImages,
+// //   updateProduct,
+// //   getAllProducts,
+// //   deleteProduct,
+// //   deleteProductImage,
+// //   getProductById,
+// // } from "../../services/productService.js";
+// // import { getAllCategories } from "../../services/categoryService.js";
+// // import styles from "./product.module.css";
+
+// // // Toast helper
+// // function showToast(message, type = "success") {
+// //   const id = `toast-${Date.now()}`;
+// //   const el = document.createElement("div");
+// //   el.id = id;
+// //   el.className = `${styles.toast} ${styles[type] || ""}`;
+// //   el.innerText = message;
+// //   document.body.appendChild(el);
+// //   setTimeout(() => {
+// //     const node = document.getElementById(id);
+// //     if (node) node.remove();
+// //   }, 3500);
+// // }
+
+// // // Full empty product template (matches your JSON)
+// // const emptyProduct = {
+// //   category_id: "",
+// //   brand: "",
+// //   name: "",
+// //   color: "",
+// //   pattern: "",
+// //   style: "",
+// //   material: "",
+// //   threadCount: "",
+// //   size: "",
+// //   dimensions: "",
+// //   pocketDepth: "",
+// //   weight: "",
+// //   countryOfOrigin: "",
+// //   price: 0,
+// //   mrp: 0,
+// //   discountPercent: 0,
+// //   description: "",
+// //   includedComponents: "",
+// //   rating: 0,
+// //   reviewsCount: 0,
+// //   link: "",
+// //   stock: 0,
+// //   is_active: true,
+// //   created_by: "",
+// //   updated_by: "",
+// // };
+
+// // export default function Product() {
+// //   const [products, setProducts] = useState([]);
+// //   const [categories, setCategories] = useState([]);
+// //   const [viewMode, setViewMode] = useState("table");
+// //   const [modalOpen, setModalOpen] = useState(false);
+// //   const [editingId, setEditingId] = useState(null);
+// //   const [form, setForm] = useState(emptyProduct);
+// //   const [selectedFiles, setSelectedFiles] = useState([]);
+// //   const [createdProductId, setCreatedProductId] = useState(null);
+// //   const [loading, setLoading] = useState(false);
+// //   const [manualDiscount, setManualDiscount] = useState(false);
+// //   const modalBodyRef = useRef(null);
+
+// //   useEffect(() => {
+// //     fetchProducts();
+// //     fetchCategories();
+// //   }, []);
+
+// //   async function fetchProducts() {
+// //     try {
+// //       setLoading(true);
+// //       const resp = await getAllProducts();
+// //       setProducts(Array.isArray(resp) ? resp : resp.data || []);
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Failed to load products", "error");
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   }
+
+// //   async function fetchCategories() {
+// //     try {
+// //       const resp = await getAllCategories();
+// //       setCategories(Array.isArray(resp) ? resp : resp.data || []);
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Failed to load categories", "error");
+// //     }
+// //   }
+
+// //   function openAddModal() {
+// //     setEditingId(null);
+// //     setForm(emptyProduct);
+// //     setSelectedFiles([]);
+// //     setCreatedProductId(null);
+// //     setManualDiscount(false);
+// //     setModalOpen(true);
+// //     // ensure modal scroll top when opened
+// //     setTimeout(() => modalBodyRef.current?.scrollTo?.(0, 0), 50);
+// //   }
+
+// //   async function openEditModal(productId) {
+// //     try {
+// //       setLoading(true);
+// //       const resp = await getProductById(productId);
+// //       const p = resp?.data || resp;
+// //       // normalize numeric fields
+// //       const normalized = {
+// //         ...emptyProduct,
+// //         ...p,
+// //         price: Number(p.price || 0),
+// //         mrp: Number(p.mrp || 0),
+// //         discountPercent: Number(p.discountPercent || 0),
+// //         rating: Number(p.rating || 0),
+// //         reviewsCount: Number(p.reviewsCount || 0),
+// //         stock: Number(p.stock || 0),
+// //         threadCount: p.threadCount || "",
+// //       };
+// //       setForm(normalized);
+// //       setEditingId(productId);
+// //       setCreatedProductId(productId);
+// //       setManualDiscount(Boolean(p && p.discountPercent));
+// //       setModalOpen(true);
+// //       setTimeout(() => modalBodyRef.current?.scrollTo?.(0, 0), 50);
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Failed to fetch product", "error");
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   }
+
+// //   // calculate discount from price & mrp
+// //   function computeDiscount(mrp, price) {
+// //     const m = Number(mrp) || 0;
+// //     const p = Number(price) || 0;
+// //     if (m <= 0) return 0;
+// //     const d = Math.round(((m - p) / m) * 100);
+// //     return d < 0 ? 0 : d;
+// //   }
+
+// //   function onChange(e) {
+// //     const { name, value, type, checked } = e.target;
+// //     const val = type === "checkbox" ? checked : value;
+
+// //     // if user types discount field, switch to manual mode
+// //     if (name === "discountPercent") {
+// //       setManualDiscount(true);
+// //       setForm((f) => ({ ...f, [name]: Number(val) }));
+// //       return;
+// //     }
+
+// //     // if changing price or mrp and not manualDiscount -> auto update discountPercent
+// //     if ((name === "price" || name === "mrp") && !manualDiscount) {
+// //       // allow floats/ints
+// //       const newForm = { ...form, [name]: type === "number" ? Number(val) : val };
+// //       const mrpVal = name === "mrp" ? Number(val) : Number(newForm.mrp || 0);
+// //       const priceVal = name === "price" ? Number(val) : Number(newForm.price || 0);
+// //       const newDiscount = computeDiscount(mrpVal, priceVal);
+// //       setForm((f) => ({ ...newForm, discountPercent: newDiscount }));
+// //       return;
+// //     }
+
+// //     // normal update
+// //     setForm((f) => ({ ...f, [name]: type === "number" ? Number(val) : val }));
+// //   }
+
+// //   // allows user to reset discount manual mode (a small button)
+// //   function resetDiscountAuto() {
+// //     setManualDiscount(false);
+// //     const d = computeDiscount(form.mrp, form.price);
+// //     setForm((f) => ({ ...f, discountPercent: d }));
+// //   }
+
+// //   function onFileChange(e) {
+// //     setSelectedFiles(e.target.files);
+// //   }
+
+// //   async function handleSaveDetails(e) {
+// //     e.preventDefault();
+// //     try {
+// //       setLoading(true);
+// //       // Ensure numeric fields are numbers
+// //       const payload = {
+// //         ...form,
+// //         price: Number(form.price || 0),
+// //         mrp: Number(form.mrp || 0),
+// //         discountPercent: Number(form.discountPercent || 0),
+// //         rating: Number(form.rating || 0),
+// //         reviewsCount: Number(form.reviewsCount || 0),
+// //         stock: Number(form.stock || 0),
+// //         threadCount: form.threadCount ? Number(form.threadCount) : undefined,
+// //       };
+
+// //       if (editingId) {
+// //         await updateProduct(editingId, payload);
+// //         showToast("Product updated");
+// //         await fetchProducts();
+// //         setCreatedProductId(editingId);
+// //       } else {
+// //         const created = await createProduct(payload);
+// //         const id =
+// //           created?.data?.id || created?.id || created?.productId || null;
+// //         if (id) {
+// //           setCreatedProductId(id);
+// //           showToast("Product created. You can upload images now.");
+// //           await fetchProducts();
+// //           setEditingId(id);
+// //         } else {
+// //           showToast("Product created (no id returned)", "warning");
+// //         }
+// //       }
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Save failed", "error");
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   }
+
+// //   async function handleUploadImages(e) {
+// //     e.preventDefault();
+// //     const productId = createdProductId || editingId;
+// //     if (!productId) {
+// //       showToast("No product ID found. Save product first.", "error");
+// //       return;
+// //     }
+// //     if (!selectedFiles || selectedFiles.length === 0) {
+// //       showToast("Select images first", "error");
+// //       return;
+// //     }
+// //     try {
+// //       setLoading(true);
+// //       await uploadProductImages(productId, selectedFiles);
+// //       showToast("Images uploaded");
+// //       setSelectedFiles([]);
+// //       await fetchProducts();
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Image upload failed", "error");
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   }
+
+// //   async function handleDelete(productId) {
+// //     if (!window.confirm("Confirm delete this product?")) return;
+// //     try {
+// //       setLoading(true);
+// //       await deleteProduct(productId);
+// //       showToast("Product deleted");
+// //       await fetchProducts();
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Delete failed", "error");
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   }
+
+// //   async function handleDeleteImage(imageId) {
+// //     if (!window.confirm("Delete this image?")) return;
+// //     try {
+// //       await deleteProductImage(imageId);
+// //       showToast("Image deleted");
+// //       await fetchProducts();
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Image delete failed", "error");
+// //     }
+// //   }
+
+// //   // helper to display product images for modal
+// //   function imagesFor(productId) {
+// //     const p = products.find((x) => (x.id || x.product_id || x._id) === productId);
+// //     return p?.images || [];
+// //   }
+
+// //   return (
+// //     <div className={styles.productPage}>
+// //       <header className={styles.productHeader}>
+// //         <h2>Products</h2>
+// //         <div className={styles.controls}>
+// //           <button onClick={openAddModal} className={styles.primary}>
+// //             Add Product
+// //           </button>
+// //           <button
+// //             onClick={() => setViewMode(viewMode === "table" ? "card" : "table")}
+// //             className={styles.secondary}
+// //           >
+// //             {viewMode === "table" ? "Card View" : "Table View"}
+// //           </button>
+// //         </div>
+// //       </header>
+
+// //       {loading && <div className={styles.loading}>Loading...</div>}
+
+// //       {/* TABLE */}
+// //       {viewMode === "table" && (
+// //         <table className={styles.productTable}>
+// //           <thead>
+// //             <tr>
+// //               <th>Image</th>
+// //               <th>Name</th>
+// //               <th>Category</th>
+// //               <th>Price</th>
+// //               <th>MRP</th>
+// //               <th>Stock</th>
+// //               <th>Actions</th>
+// //             </tr>
+// //           </thead>
+// //           <tbody>
+// //             {products.length === 0 && (
+// //               <tr>
+// //                 <td colSpan="7">No products</td>
+// //               </tr>
+// //             )}
+// //             {products.map((p) => {
+// //               const id = p.id || p.product_id || p._id;
+// //               const thumb = (p.images && p.images[0]?.url) || p.image || p.thumbnail || "";
+// //               return (
+// //                 <tr key={id}>
+// //                   <td className={styles.thumbCell}>
+// //                     {thumb ? <img src={thumb} alt={p.name} /> : <div className={styles.noThumb}>N/A</div>}
+// //                   </td>
+// //                   <td>{p.name}</td>
+// //                   <td>{p.category_name || "N/A"}</td>
+// //                   <td>₹{p.price}</td>
+// //                   <td>₹{p.mrp}</td>
+// //                   <td>{p.stock}</td>
+// //                   <td>
+// //                     <button onClick={() => openEditModal(id)}>Edit</button>
+// //                     <button onClick={() => handleDelete(id)} className={styles.danger}>Delete</button>
+// //                   </td>
+// //                 </tr>
+// //               );
+// //             })}
+// //           </tbody>
+// //         </table>
+// //       )}
+
+// //       {/* CARD */}
+// //       {viewMode === "card" && (
+// //         <div className={styles.cardGrid}>
+// //           {products.map((p) => {
+// //             const id = p.id || p.product_id || p._id;
+// //             const thumb = (p.images && p.images[0]?.url) || p.image || p.thumbnail || "";
+// //             return (
+// //               <div className={styles.productCard} key={id}>
+// //                 <div className={styles.cardMedia}>
+// //                   {thumb ? <img src={thumb} alt={p.name} /> : <div className={styles.noThumb}>No Image</div>}
+// //                 </div>
+// //                 <div className={styles.cardBody}>
+// //                   <h3>{p.name}</h3>
+// //                   <p className={styles.brand}>{p.brand}</p>
+// //                   <p className={styles.price}>₹{p.price} <span className={styles.mrp}>MRP ₹{p.mrp}</span></p>
+// //                   <p className={styles.stock}>Stock: {p.stock}</p>
+// //                   <div className={styles.cardActions}>
+// //                     <button onClick={() => openEditModal(id)}>Edit</button>
+// //                     <button onClick={() => handleDelete(id)} className={styles.danger}>Delete</button>
+// //                   </div>
+// //                 </div>
+// //               </div>
+// //             );
+// //           })}
+// //         </div>
+// //       )}
+
+// //       {/* MODAL */}
+// //       {modalOpen && (
+// //         <div className={styles.modalBackdrop} onClick={() => setModalOpen(false)}>
+// //           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+// //             <div className={styles.modalHeader}>
+// //               <h3>{editingId ? "Update Product" : "Add Product"}</h3>
+// //               <div className={styles.modalHeaderActions}>
+// //                 <button onClick={() => { setModalOpen(false); }} className={styles.ghost}>Close</button>
+// //               </div>
+// //             </div>
+
+// //             <div className={styles.modalBody} ref={modalBodyRef}>
+// //               {/* BASIC INFO */}
+// //               <section className={styles.section}>
+// //                 <h4 className={styles.sectionTitle}>Basic Info</h4>
+// //                 <div className={styles.grid2}>
+// //                   <div className={styles.formRow}>
+// //                     <label>Name</label>
+// //                     <input name="name" value={form.name || ""} onChange={onChange} required />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Category</label>
+// //                     <select name="category_id" value={form.category_id || ""} onChange={onChange} required>
+// //                       <option value="">-- Select Category --</option>
+// //                       {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+// //                     </select>
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Brand</label>
+// //                     <input name="brand" value={form.brand || ""} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Color</label>
+// //                     <input name="color" value={form.color || ""} onChange={onChange} />
+// //                   </div>
+// //                 </div>
+// //               </section>
+
+// //               {/* SPECIFICATIONS */}
+// //               <section className={styles.section}>
+// //                 <h4 className={styles.sectionTitle}>Specifications</h4>
+// //                 <div className={styles.grid2}>
+// //                   <div className={styles.formRow}>
+// //                     <label>Pattern</label>
+// //                     <input name="pattern" value={form.pattern || ""} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Style</label>
+// //                     <input name="style" value={form.style || ""} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Material</label>
+// //                     <input name="material" value={form.material || ""} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Thread Count</label>
+// //                     <input name="threadCount" type="number" value={form.threadCount || ""} onChange={onChange} />
+// //                   </div>
+
+// //                   <div className={styles.formRow}>
+// //                     <label>Size</label>
+// //                     <input name="size" value={form.size || ""} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Dimensions</label>
+// //                     <input name="dimensions" value={form.dimensions || ""} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Pocket Depth</label>
+// //                     <input name="pocketDepth" value={form.pocketDepth || ""} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Weight</label>
+// //                     <input name="weight" value={form.weight || ""} onChange={onChange} />
+// //                   </div>
+
+// //                   <div className={styles.formRow}>
+// //                     <label>Country of Origin</label>
+// //                     <input name="countryOfOrigin" value={form.countryOfOrigin || ""} onChange={onChange} />
+// //                   </div>
+// //                 </div>
+// //               </section>
+
+// //               {/* PRICING */}
+// //               <section className={styles.section}>
+// //                 <h4 className={styles.sectionTitle}>Pricing</h4>
+// //                 <div className={styles.grid2}>
+// //                   <div className={styles.formRow}>
+// //                     <label>Price</label>
+// //                     <input name="price" type="number" value={form.price || 0} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>MRP</label>
+// //                     <input name="mrp" type="number" value={form.mrp || 0} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Discount %</label>
+// //                     <input
+// //                       name="discountPercent"
+// //                       type="number"
+// //                       value={form.discountPercent || 0}
+// //                       onChange={onChange}
+// //                     />
+// //                     <div className={styles.hintRow}>
+// //                       {!manualDiscount ? (
+// //                         <button type="button" className={styles.linkBtn} onClick={() => setManualDiscount(true)}>
+// //                           Edit discount manually
+// //                         </button>
+// //                       ) : (
+// //                         <button type="button" className={styles.linkBtn} onClick={resetDiscountAuto}>
+// //                           Auto-calc discount
+// //                         </button>
+// //                       )}
+// //                     </div>
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Included Components</label>
+// //                     <input name="includedComponents" value={form.includedComponents || ""} onChange={onChange} />
+// //                   </div>
+// //                 </div>
+// //               </section>
+
+// //               {/* INVENTORY & METRICS */}
+// //               <section className={styles.section}>
+// //                 <h4 className={styles.sectionTitle}>Inventory & Metrics</h4>
+// //                 <div className={styles.grid2}>
+// //                   <div className={styles.formRow}>
+// //                     <label>Stock</label>
+// //                     <input name="stock" type="number" value={form.stock || 0} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Rating</label>
+// //                     <input name="rating" type="number" step="0.1" value={form.rating || 0} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Reviews Count</label>
+// //                     <input name="reviewsCount" type="number" value={form.reviewsCount || 0} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Product Link</label>
+// //                     <input name="link" value={form.link || ""} onChange={onChange} />
+// //                   </div>
+// //                 </div>
+// //               </section>
+
+// //               {/* DESCRIPTION & META */}
+// //               <section className={styles.section}>
+// //                 <h4 className={styles.sectionTitle}>Description & Meta</h4>
+// //                 <div className={styles.formRow}>
+// //                   <label>Description</label>
+// //                   <textarea name="description" value={form.description || ""} onChange={onChange} />
+// //                 </div>
+
+// //                 {/* <div className={styles.grid2}>
+// //                   <div className={styles.formRow}>
+// //                     <label>Created By (id)</label>
+// //                     <input name="created_by" value={form.created_by || ""} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>Updated By (id)</label>
+// //                     <input name="updated_by" value={form.updated_by || ""} onChange={onChange} />
+// //                   </div>
+// //                   <div className={styles.formRow}>
+// //                     <label>
+// //                       <input type="checkbox" name="is_active" checked={!!form.is_active} onChange={onChange} /> Active
+// //                     </label>
+// //                   </div>
+// //                 </div> */}
+// //               </section>
+
+// //               {/* IMAGE UPLOAD */}
+// //               <section className={styles.section}>
+// //                 <h4 className={styles.sectionTitle}>Images</h4>
+// //                 <div className={styles.formRow}>
+// //                   <input type="file" multiple onChange={onFileChange} />
+// //                 </div>
+// //                 <div className={styles.formRow}>
+// //                   <button onClick={handleUploadImages} disabled={!(createdProductId || editingId)} className={styles.primary}>
+// //                     Upload Images
+// //                   </button>
+// //                   <span className={styles.muted}>
+// //                     {createdProductId || editingId ? `Product ID: ${createdProductId || editingId}` : "Save first to upload images"}
+// //                   </span>
+// //                 </div>
+
+// //                 {/* show existing images */}
+// //                 <div className={styles.imgRow}>
+// //                   {(imagesFor(createdProductId || editingId) || []).map((img) => (
+// //                     <div key={img.id || img._id || img.imageId} className={styles.imgThumb}>
+// //                       <img src={img.url || img.path || img} alt="product" />
+// //                       <button onClick={() => handleDeleteImage(img.id || img._id || img.imageId)}>✕</button>
+// //                     </div>
+// //                   ))}
+// //                 </div>
+// //               </section>
+// //             </div>
+
+// //             <div className={styles.modalFooter}>
+// //               <div className={styles.footerLeft}>
+// //                 <button onClick={() => { setModalOpen(false); }} className={styles.ghost}>Cancel</button>
+// //               </div>
+// //               <div className={styles.footerRight}>
+// //                 <button onClick={() => { setForm(emptyProduct); setManualDiscount(false); }} className={styles.secondary}>Reset</button>
+// //                 <button onClick={handleSaveDetails} className={styles.primary}>
+// //                   {editingId ? "Update Product" : "Create Product"}
+// //                 </button>
+// //               </div>
+// //             </div>
+// //           </div>
+// //         </div>
+// //       )}
+// //     </div>
+// //   );
+// // }
+
+
+// import React, { useEffect, useState, useRef } from "react";
+// import {
+//   createProduct,
+//   uploadProductImages,
+//   updateProduct,
+//   getAllProducts,
+//   deleteProduct,
+//   deleteProductImage,
+//   getProductById,
+// } from "../../services/productService.js";
+// import { getAllCategories } from "../../services/categoryService.js";
+// import styles from "./product.module.css";
+// import AddProductModal from "./AddProductModal.jsx"; // ✅ separate modal component
+
+// // Toast helper
+// function showToast(message, type = "success") {
+//   const id = `toast-${Date.now()}`;
+//   const el = document.createElement("div");
+//   el.id = id;
+//   el.className = `${styles.toast} ${styles[type] || ""}`;
+//   el.innerText = message;
+//   document.body.appendChild(el);
+//   setTimeout(() => {
+//     const node = document.getElementById(id);
+//     if (node) node.remove();
+//   }, 3500);
+// }
+
+// // Empty product template
+// const emptyProduct = {
+//   category_id: "",
+//   brand: "",
+//   name: "",
+//   color: "",
+//   pattern: "",
+//   style: "",
+//   material: "",
+//   threadCount: "",
+//   size: "",
+//   dimensions: "",
+//   pocketDepth: "",
+//   weight: "",
+//   countryOfOrigin: "",
+//   price: 0,
+//   mrp: 0,
+//   discountPercent: 0,
+//   description: "",
+//   includedComponents: "",
+//   rating: 0,
+//   reviewsCount: 0,
+//   link: "",
+//   stock: 0,
+//   is_active: true,
+//   created_by: "",
+//   updated_by: "",
+// };
+
+// export default function Product() {
+//   const [products, setProducts] = useState([]);
+//   const [categories, setCategories] = useState([]);
+//   const [viewMode, setViewMode] = useState("table");
+//   const [modalOpen, setModalOpen] = useState(false);
+//   const [editingId, setEditingId] = useState(null);
+//   const [form, setForm] = useState(emptyProduct);
+//   const [selectedFiles, setSelectedFiles] = useState([]);
+//   const [createdProductId, setCreatedProductId] = useState(null);
+//   const [loading, setLoading] = useState(false);
+//   const [manualDiscount, setManualDiscount] = useState(false);
+//   const modalBodyRef = useRef(null);
+
+//   useEffect(() => {
+//     fetchProducts();
+//     fetchCategories();
+//   }, []);
+
+//   async function fetchProducts() {
+//     try {
+//       setLoading(true);
+//       const resp = await getAllProducts();
+//       setProducts(Array.isArray(resp) ? resp : resp.data || []);
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Failed to load products", "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   async function fetchCategories() {
+//     try {
+//       const resp = await getAllCategories();
+//       setCategories(Array.isArray(resp) ? resp : resp.data || []);
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Failed to load categories", "error");
+//     }
+//   }
+
+//   function openAddModal() {
+//     setEditingId(null);
+//     setForm(emptyProduct);
+//     setSelectedFiles([]);
+//     setCreatedProductId(null);
+//     setManualDiscount(false);
+//     setModalOpen(true);
+//     setTimeout(() => modalBodyRef.current?.scrollTo?.(0, 0), 50);
+//   }
+
+//   async function openEditModal(productId) {
+//     try {
+//       setLoading(true);
+//       const resp = await getProductById(productId);
+//       const p = resp?.data || resp;
+//       const normalized = {
+//         ...emptyProduct,
+//         ...p,
+//         price: Number(p.price || 0),
+//         mrp: Number(p.mrp || 0),
+//         discountPercent: Number(p.discountPercent || 0),
+//         rating: Number(p.rating || 0),
+//         reviewsCount: Number(p.reviewsCount || 0),
+//         stock: Number(p.stock || 0),
+//         threadCount: p.threadCount || "",
+//       };
+//       setForm(normalized);
+//       setEditingId(productId);
+//       setCreatedProductId(productId);
+//       setManualDiscount(Boolean(p && p.discountPercent));
+//       setModalOpen(true);
+//       setTimeout(() => modalBodyRef.current?.scrollTo?.(0, 0), 50);
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Failed to fetch product", "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   function computeDiscount(mrp, price) {
+//     const m = Number(mrp) || 0;
+//     const p = Number(price) || 0;
+//     if (m <= 0) return 0;
+//     const d = Math.round(((m - p) / m) * 100);
+//     return d < 0 ? 0 : d;
+//   }
+
+//   function onChange(e) {
+//     const { name, value, type, checked } = e.target;
+//     const val = type === "checkbox" ? checked : value;
+
+//     if (name === "discountPercent") {
+//       setManualDiscount(true);
+//       setForm((f) => ({ ...f, [name]: Number(val) }));
+//       return;
+//     }
+
+//     if ((name === "price" || name === "mrp") && !manualDiscount) {
+//       const newForm = { ...form, [name]: type === "number" ? Number(val) : val };
+//       const mrpVal = name === "mrp" ? Number(val) : Number(newForm.mrp || 0);
+//       const priceVal = name === "price" ? Number(val) : Number(newForm.price || 0);
+//       const newDiscount = computeDiscount(mrpVal, priceVal);
+//       setForm((f) => ({ ...newForm, discountPercent: newDiscount }));
+//       return;
+//     }
+
+//     setForm((f) => ({ ...f, [name]: type === "number" ? Number(val) : val }));
+//   }
+
+//   function resetDiscountAuto() {
+//     setManualDiscount(false);
+//     const d = computeDiscount(form.mrp, form.price);
+//     setForm((f) => ({ ...f, discountPercent: d }));
+//   }
+
+//   function onFileChange(e) {
+//     setSelectedFiles(e.target.files);
+//   }
+
+//   async function handleSaveDetails(e) {
+//     e.preventDefault();
+//     try {
+//       setLoading(true);
+//       const payload = {
+//         ...form,
+//         price: Number(form.price || 0),
+//         mrp: Number(form.mrp || 0),
+//         discountPercent: Number(form.discountPercent || 0),
+//         rating: Number(form.rating || 0),
+//         reviewsCount: Number(form.reviewsCount || 0),
+//         stock: Number(form.stock || 0),
+//         threadCount: form.threadCount ? Number(form.threadCount) : undefined,
+//       };
+
+//       if (editingId) {
+//         await updateProduct(editingId, payload);
+//         showToast("Product updated");
+//         await fetchProducts();
+//         setCreatedProductId(editingId);
+//       } else {
+//         const created = await createProduct(payload);
+//         const id =
+//           created?.data?.id || created?.id || created?.productId || null;
+//         if (id) {
+//           setCreatedProductId(id);
+//           showToast("Product created. You can upload images now.");
+//           await fetchProducts();
+//           setEditingId(id);
+//         } else {
+//           showToast("Product created (no id returned)", "warning");
+//         }
+//       }
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Save failed", "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   async function handleUploadImages(e) {
+//     e.preventDefault();
+//     const productId = createdProductId || editingId;
+//     if (!productId) {
+//       showToast("No product ID found. Save product first.", "error");
+//       return;
+//     }
+//     if (!selectedFiles || selectedFiles.length === 0) {
+//       showToast("Select images first", "error");
+//       return;
+//     }
+//     try {
+//       setLoading(true);
+//       await uploadProductImages(productId, selectedFiles);
+//       showToast("Images uploaded");
+//       setSelectedFiles([]);
+//       await fetchProducts();
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Image upload failed", "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   async function handleDelete(productId) {
+//     if (!window.confirm("Confirm delete this product?")) return;
+//     try {
+//       setLoading(true);
+//       await deleteProduct(productId);
+//       showToast("Product deleted");
+//       await fetchProducts();
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Delete failed", "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   async function handleDeleteImage(imageId) {
+//     if (!window.confirm("Delete this image?")) return;
+//     try {
+//       await deleteProductImage(imageId);
+//       showToast("Image deleted");
+//       await fetchProducts();
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Image delete failed", "error");
+//     }
+//   }
+
+//   function imagesFor(productId) {
+//     const p = products.find((x) => (x.id || x.product_id || x._id) === productId);
+//     return p?.images || [];
+//   }
+
+//   return (
+//     <div className={styles.productPage}>
+//       <header className={styles.productHeader}>
+//         <h2>Products</h2>
+//         <div className={styles.controls}>
+//           <button onClick={openAddModal} className={styles.primary}>
+//             Add Product
+//           </button>
+//           <button
+//             onClick={() => setViewMode(viewMode === "table" ? "card" : "table")}
+//             className={styles.secondary}
+//           >
+//             {viewMode === "table" ? "Card View" : "Table View"}
+//           </button>
+//         </div>
+//       </header>
+
+//       {loading && <div className={styles.loading}>Loading...</div>}
+
+//       {/* TABLE VIEW */}
+//       {viewMode === "table" && (
+//         <table className={styles.productTable}>
+//           <thead>
+//             <tr>
+//               <th>Image</th>
+//               <th>Name</th>
+//               <th>Category</th>
+//               <th>Price</th>
+//               <th>MRP</th>
+//               <th>Stock</th>
+//               <th>Actions</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {products.length === 0 && (
+//               <tr>
+//                 <td colSpan="7">No products</td>
+//               </tr>
+//             )}
+//             {products.map((p) => {
+//               const id = p.id || p.product_id || p._id;
+//               const thumb =
+//                 (p.images && p.images[0]?.url) || p.image || p.thumbnail || "";
+//               return (
+//                 <tr key={id}>
+//                   <td className={styles.thumbCell}>
+//                     {thumb ? (
+//                       <img src={thumb} alt={p.name} />
+//                     ) : (
+//                       <div className={styles.noThumb}>N/A</div>
+//                     )}
+//                   </td>
+//                   <td>{p.name}</td>
+//                   <td>{p.category_name || "N/A"}</td>
+//                   <td>₹{p.price}</td>
+//                   <td>₹{p.mrp}</td>
+//                   <td>{p.stock}</td>
+//                   <td>
+//                     <button onClick={() => openEditModal(id)}>Edit</button>
+//                     <button
+//                       onClick={() => handleDelete(id)}
+//                       className={styles.danger}
+//                     >
+//                       Delete
+//                     </button>
+//                   </td>
+//                 </tr>
+//               );
+//             })}
+//           </tbody>
+//         </table>
+//       )}
+
+//       {/* CARD VIEW */}
+//       {viewMode === "card" && (
+//         <div className={styles.cardGrid}>
+//           {products.map((p) => {
+//             const id = p.id || p.product_id || p._id;
+//             const thumb =
+//               (p.images && p.images[0]?.url) || p.image || p.thumbnail || "";
+//             return (
+//               <div className={styles.productCard} key={id}>
+//                 <div className={styles.cardMedia}>
+//                   {thumb ? (
+//                     <img src={thumb} alt={p.name} />
+//                   ) : (
+//                     <div className={styles.noThumb}>No Image</div>
+//                   )}
+//                 </div>
+//                 <div className={styles.cardBody}>
+//                   <h3>{p.name}</h3>
+//                   <p className={styles.brand}>{p.brand}</p>
+//                   <p className={styles.price}>
+//                     ₹{p.price}{" "}
+//                     <span className={styles.mrp}>MRP ₹{p.mrp}</span>
+//                   </p>
+//                   <p className={styles.stock}>Stock: {p.stock}</p>
+//                   <div className={styles.cardActions}>
+//                     <button onClick={() => openEditModal(id)}>Edit</button>
+//                     <button
+//                       onClick={() => handleDelete(id)}
+//                       className={styles.danger}
+//                     >
+//                       Delete
+//                     </button>
+//                   </div>
+//                 </div>
+//               </div>
+//             );
+//           })}
+//         </div>
+//       )}
+
+//       {/* MODAL (separated) */}
+//       {modalOpen && (
+//         <AddProductModal
+//           open={modalOpen}
+//           onClose={() => setModalOpen(false)}
+//           form={form}
+//           onChange={onChange}
+//           onSave={handleSaveDetails}
+//           onReset={() => {
+//             setForm(emptyProduct);
+//             setManualDiscount(false);
+//           }}
+//           onFileChange={onFileChange}
+//           onUploadImages={handleUploadImages}
+//           images={imagesFor(createdProductId || editingId)}
+//           categories={categories}
+//           createdProductId={createdProductId}
+//           editingId={editingId}
+//           handleDeleteImage={handleDeleteImage}
+//           manualDiscount={manualDiscount}
+//           setManualDiscount={setManualDiscount}
+//           resetDiscountAuto={resetDiscountAuto}
+//           loading={loading}
+//         />
+//       )}
+//     </div>
+//   );
+// }
+
+
+
+// // // src/pages/product/Product.jsx
+// // import React, { useEffect, useState, useRef } from "react";
+// // import {
+// //   createProduct,
+// //   uploadProductImages,
+// //   updateProduct,
+// //   getAllProducts,
+// //   deleteProduct,
+// //   deleteProductImage,
+// //   getProductById,
+// // } from "../../services/productService.js";
+// // import { getAllCategories } from "../../services/categoryService.js";
+// // import styles from "./product.module.css";
+// // import AddProductModal from "./AddProductModal.jsx"; // ✅ clean modal component
+
+// // // 🔔 Toast utility
+// // function showToast(message, type = "success") {
+// //   const id = `toast-${Date.now()}`;
+// //   const el = document.createElement("div");
+// //   el.id = id;
+// //   el.className = `${styles.toast} ${styles[type] || ""}`;
+// //   el.innerText = message;
+// //   document.body.appendChild(el);
+// //   setTimeout(() => document.getElementById(id)?.remove(), 3500);
+// // }
+
+// // // 🧩 Default product object
+// // const emptyProduct = {
+// //   category_id: "",
+// //   brand: "",
+// //   name: "",
+// //   color: "",
+// //   pattern: "",
+// //   style: "",
+// //   material: "",
+// //   threadCount: "",
+// //   size: "",
+// //   dimensions: "",
+// //   pocketDepth: "",
+// //   weight: "",
+// //   countryOfOrigin: "",
+// //   price: 0,
+// //   mrp: 0,
+// //   discountPercent: 0,
+// //   description: "",
+// //   includedComponents: "",
+// //   rating: 0,
+// //   reviewsCount: 0,
+// //   link: "",
+// //   stock: 0,
+// //   is_active: true,
+// //   created_by: "",
+// //   updated_by: "",
+// // };
+
+// // export default function Product() {
+// //   const [products, setProducts] = useState([]);
+// //   const [categories, setCategories] = useState([]);
+// //   const [viewMode, setViewMode] = useState("table");
+// //   const [modalOpen, setModalOpen] = useState(false);
+// //   const [editingId, setEditingId] = useState(null);
+// //   const [form, setForm] = useState(emptyProduct);
+// //   const [selectedFiles, setSelectedFiles] = useState([]);
+// //   const [createdProductId, setCreatedProductId] = useState(null);
+// //   const [loading, setLoading] = useState(false);
+// //   const [manualDiscount, setManualDiscount] = useState(false);
+// //   const modalBodyRef = useRef(null);
+
+// //   // 🧭 Initial load
+// //   useEffect(() => {
+// //     fetchProducts();
+// //     fetchCategories();
+// //   }, []);
+
+// //   // 🧱 Fetch products
+// //   async function fetchProducts() {
+// //     try {
+// //       setLoading(true);
+// //       const resp = await getAllProducts();
+// //       setProducts(Array.isArray(resp) ? resp : resp.data || []);
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Failed to load products", "error");
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   }
+
+// //   // src/pages/product/Product.jsx
+
+// // // ... (rest of the imports)
+
+// // // 🧱 Fetch categories
+// // async function fetchCategories() {
+// //   try {
+// //     // 🔑 Get the token from localStorage
+// //     const token = localStorage.getItem("token"); 
+
+// //     // 🎯 Pass the token to the service function
+// //     const resp = await getAllCategories(token); 
+    
+// //     setCategories(Array.isArray(resp) ? resp : resp.data || []);
+// //   } catch (err) {
+// //     console.error(err);
+// //     showToast("Failed to load categories", "error");
+// //   }
+// // }
+// //   // ➕ Open Add Modal
+// //   function openAddModal() {
+// //     setEditingId(null);
+// //     setForm(emptyProduct);
+// //     setSelectedFiles([]);
+// //     setCreatedProductId(null);
+// //     setManualDiscount(false);
+// //     setModalOpen(true);
+// //     setTimeout(() => modalBodyRef.current?.scrollTo?.(0, 0), 50);
+// //   }
+
+// //   // ✏️ Open Edit Modal
+// //   async function openEditModal(productId) {
+// //     try {
+// //       setLoading(true);
+// //       const resp = await getProductById(productId);
+// //       const p = resp?.data || resp;
+// //       const normalized = {
+// //         ...emptyProduct,
+// //         ...p,
+// //         price: Number(p.price || 0),
+// //         mrp: Number(p.mrp || 0),
+// //         discountPercent: Number(p.discountPercent || 0),
+// //         rating: Number(p.rating || 0),
+// //         reviewsCount: Number(p.reviewsCount || 0),
+// //         stock: Number(p.stock || 0),
+// //       };
+// //       setForm(normalized);
+// //       setEditingId(productId);
+// //       setCreatedProductId(productId);
+// //       setManualDiscount(Boolean(p?.discountPercent));
+// //       setModalOpen(true);
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Failed to fetch product details", "error");
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   }
+
+// //   // 🧮 Auto discount calc
+// //   function computeDiscount(mrp, price) {
+// //     const m = Number(mrp) || 0;
+// //     const p = Number(price) || 0;
+// //     return m > 0 ? Math.max(0, Math.round(((m - p) / m) * 100)) : 0;
+// //   }
+
+// //   // 🧾 Delete product
+// //   async function handleDelete(productId) {
+// //     if (!window.confirm("Confirm delete this product?")) return;
+// //     try {
+// //       setLoading(true);
+// //       await deleteProduct(productId);
+// //       showToast("Product deleted");
+// //       fetchProducts();
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Delete failed", "error");
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   }
+
+// //   // 🗑️ Delete image
+// //   async function handleDeleteImage(imageId) {
+// //     if (!window.confirm("Delete this image?")) return;
+// //     try {
+// //       await deleteProductImage(imageId);
+// //       showToast("Image deleted");
+// //       fetchProducts();
+// //     } catch (err) {
+// //       console.error(err);
+// //       showToast("Image delete failed", "error");
+// //     }
+// //   }
+
+// //   // 📷 Get images for product
+// //   function imagesFor(productId) {
+// //     const p = products.find((x) => (x.id || x.product_id || x._id) === productId);
+// //     return p?.images || [];
+// //   }
+
+// //   return (
+// //     <div className={styles.productPage}>
+// //       <header className={styles.productHeader}>
+// //         <h2>Products</h2>
+// //         <div className={styles.controls}>
+// //           <button onClick={openAddModal} className={styles.primary}>
+// //             + Add Product
+// //           </button>
+// //           <button
+// //             onClick={() => setViewMode(viewMode === "table" ? "card" : "table")}
+// //             className={styles.secondary}
+// //           >
+// //             {viewMode === "table" ? "Card View" : "Table View"}
+// //           </button>
+// //         </div>
+// //       </header>
+
+// //       {loading && <div className={styles.loading}>Loading...</div>}
+
+// //       {/* 🧾 TABLE VIEW */}
+// //       {viewMode === "table" && (
+// //         <table className={styles.productTable}>
+// //           <thead>
+// //             <tr>
+// //               <th>Image</th>
+// //               <th>Name</th>
+// //               <th>Category</th>
+// //               <th>Price</th>
+// //               <th>MRP</th>
+// //               <th>Stock</th>
+// //               <th>Actions</th>
+// //             </tr>
+// //           </thead>
+// //           <tbody>
+// //             {products.length === 0 && (
+// //               <tr>
+// //                 <td colSpan="7">No products available</td>
+// //               </tr>
+// //             )}
+// //             {products.map((p) => {
+// //               const id = p.id || p.product_id || p._id;
+// //               const thumb =
+// //                 p.images?.[0]?.url || p.image || p.thumbnail || "";
+// //               return (
+// //                 <tr key={id}>
+// //                   <td className={styles.thumbCell}>
+// //                     {thumb ? (
+// //                       <img src={thumb} alt={p.name} />
+// //                     ) : (
+// //                       <div className={styles.noThumb}>N/A</div>
+// //                     )}
+// //                   </td>
+// //                   <td>{p.name}</td>
+// //                   <td>{p.category_name || "N/A"}</td>
+// //                   <td>₹{p.price}</td>
+// //                   <td>₹{p.mrp}</td>
+// //                   <td>{p.stock}</td>
+// //                   <td>
+// //                     <button onClick={() => openEditModal(id)}>Edit</button>
+// //                     <button
+// //                       onClick={() => handleDelete(id)}
+// //                       className={styles.danger}
+// //                     >
+// //                       Delete
+// //                     </button>
+// //                   </td>
+// //                 </tr>
+// //               );
+// //             })}
+// //           </tbody>
+// //         </table>
+// //       )}
+
+// //       {/* 🧩 CARD VIEW */}
+// //       {viewMode === "card" && (
+// //         <div className={styles.cardGrid}>
+// //           {products.map((p) => {
+// //             const id = p.id || p.product_id || p._id;
+// //             const thumb = p.images?.[0]?.url || p.image || p.thumbnail || "";
+// //             return (
+// //               <div className={styles.productCard} key={id}>
+// //                 <div className={styles.cardMedia}>
+// //                   {thumb ? (
+// //                     <img src={thumb} alt={p.name} />
+// //                   ) : (
+// //                     <div className={styles.noThumb}>No Image</div>
+// //                   )}
+// //                 </div>
+// //                 <div className={styles.cardBody}>
+// //                   <h3>{p.name}</h3>
+// //                   <p className={styles.brand}>{p.brand}</p>
+// //                   <p className={styles.price}>
+// //                     ₹{p.price}{" "}
+// //                     <span className={styles.mrp}>MRP ₹{p.mrp}</span>
+// //                   </p>
+// //                   <p className={styles.stock}>Stock: {p.stock}</p>
+// //                   <div className={styles.cardActions}>
+// //                     <button onClick={() => openEditModal(id)}>Edit</button>
+// //                     <button
+// //                       onClick={() => handleDelete(id)}
+// //                       className={styles.danger}
+// //                     >
+// //                       Delete
+// //                     </button>
+// //                   </div>
+// //                 </div>
+// //               </div>
+// //             );
+// //           })}
+// //         </div>
+// //       )}
+
+// //       {/* 🧮 MODAL */}
+// //       {modalOpen && (
+// //         <AddProductModal
+// //           form={form}
+// //           setForm={setForm}
+// //           modalOpen={modalOpen}
+// //           setModalOpen={setModalOpen}
+// //           categories={categories}
+// //           editingId={editingId}
+// //           manualDiscount={manualDiscount}
+// //           setManualDiscount={setManualDiscount}
+// //           selectedFiles={selectedFiles}
+// //           setSelectedFiles={setSelectedFiles}
+// //           createdProductId={createdProductId}
+// //           setCreatedProductId={setCreatedProductId}
+// //           handleSaveDetails={handleSaveDetails}
+// //           handleUploadImages={handleUploadImages}
+// //           handleDeleteImage={handleDeleteImage}
+// //           resetDiscountAuto={resetDiscountAuto}
+// //           onChange={onChange}
+// //           imagesFor={imagesFor}
+// //           modalBodyRef={modalBodyRef}
+// //         />
+// //       )}
+// //     </div>
+// //   );
+// // }
+
+
+// // src/pages/product/Product.jsx
+// import React, { useEffect, useState, useRef } from "react";
+// import {
+//   createProduct,
+//   uploadProductImages,
+//   updateProduct,
+//   getAllProducts,
+//   deleteProduct,
+//   deleteProductImage,
+//   getProductById,
+// } from "../../services/productService.js";
+// import { getAllCategories } from "../../services/categoryService.js";
+// import styles from "./product.module.css";
+// import AddProductModal from "./AddProductModal.jsx"; // ✅ clean modal component
+
+// // 🔔 Toast utility
+// function showToast(message, type = "success") {
+//   const id = `toast-${Date.now()}`;
+//   const el = document.createElement("div");
+//   el.id = id;
+//   el.className = `${styles.toast} ${styles[type] || ""}`;
+//   el.innerText = message;
+//   document.body.appendChild(el);
+//   setTimeout(() => document.getElementById(id)?.remove(), 3500);
+// }
+
+// // 🧩 Default product object
+// const emptyProduct = {
+//   category_id: "",
+//   brand: "",
+//   name: "",
+//   color: "",
+//   pattern: "",
+//   style: "",
+//   material: "",
+//   threadCount: "",
+//   size: "",
+//   dimensions: "",
+//   pocketDepth: "",
+//   weight: "",
+//   countryOfOrigin: "",
+//   price: 0,
+//   mrp: 0,
+//   discountPercent: 0,
+//   description: "",
+//   includedComponents: "",
+//   rating: 0,
+//   reviewsCount: 0,
+//   link: "",
+//   stock: 0,
+//   is_active: true,
+//   created_by: "",
+//   updated_by: "",
+// };
+
+// export default function Product() {
+//   const [products, setProducts] = useState([]);
+//   const [categories, setCategories] = useState([]);
+//   const [viewMode, setViewMode] = useState("table");
+//   const [modalOpen, setModalOpen] = useState(false);
+//   const [editingId, setEditingId] = useState(null);
+//   const [form, setForm] = useState(emptyProduct);
+//   const [selectedFiles, setSelectedFiles] = useState([]);
+//   const [createdProductId, setCreatedProductId] = useState(null);
+//   const [loading, setLoading] = useState(false);
+//   const [manualDiscount, setManualDiscount] = useState(false);
+//   const modalBodyRef = useRef(null);
+
+//   // 🧭 Initial load
+//   useEffect(() => {
+//     fetchProducts();
+//     fetchCategories();
+//   }, []);
+
+//   // 🧱 Fetch products
+//   async function fetchProducts() {
+//     try {
+//       setLoading(true);
+//       // NOTE: getAllProducts in productService.js handles token internally via authHeaders()
+//       const resp = await getAllProducts();
+//       setProducts(Array.isArray(resp) ? resp : resp.data || []);
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Failed to load products", "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   // 🧱 Fetch categories - (Fix for 403 error, token is required for Axios call)
+//   async function fetchCategories() {
+//     try {
+//       const token = localStorage.getItem("token"); // Get token
+//       const resp = await getAllCategories(token); // Pass token to category service
+//       setCategories(resp.data || []); // Assuming Axios response structure with .data
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Failed to load categories", "error");
+//     }
+//   }
+//   
+//   // 📝 Handle form input change
+//   function onChange(e) {
+//     const { name, value, type, checked } = e.target;
+//     let newValue = type === "checkbox" ? checked : value;
+
+//     // Convert numeric fields
+//     if (["price", "mrp", "discountPercent", "rating", "reviewsCount", "stock"].includes(name)) {
+//       newValue = Number(newValue);
+//     }
+//     
+//     setForm(prev => {
+//       const newForm = { ...prev, [name]: newValue };
+//       
+//       // Auto-calculate discount if not manual and price/mrp change
+//       if (!manualDiscount && (name === 'price' || name === 'mrp')) {
+//         const newPrice = newForm.price || 0;
+//         const newMrp = newForm.mrp || 0;
+//         newForm.discountPercent = computeDiscount(newMrp, newPrice);
+//       }
+
+//       return newForm;
+//     });
+//   }
+
+//   // 🧮 Auto discount calc (kept from original code)
+//   function computeDiscount(mrp, price) {
+//     const m = Number(mrp) || 0;
+//     const p = Number(price) || 0;
+//     return m > 0 ? Math.max(0, Math.round(((m - p) / m) * 100)) : 0;
+//   }
+
+//   // 🔄 Reset discount to auto-calculate (Used by modal)
+//   function resetDiscountAuto() {
+//     setManualDiscount(false);
+//     setForm(prev => ({
+//       ...prev,
+//       discountPercent: computeDiscount(prev.mrp, prev.price),
+//     }));
+//   }
+
+//   // 💾 Handle saving product details (Create/Update)
+//   async function handleSaveDetails() {
+//     if (!form.name || !form.category_id) {
+//       showToast("Name and Category are required", "error");
+//       return;
+//     }
+
+//     try {
+//       setLoading(true);
+//       let resp;
+//       
+//       if (editingId) {
+//         // Update existing product
+//         resp = await updateProduct(editingId, form);
+//         showToast("Product updated successfully");
+//       } else {
+//         // Create new product
+//         resp = await createProduct(form);
+//         const newId = resp.id || resp._id || resp.product_id;
+//         setCreatedProductId(newId); // Set ID for potential image upload
+//         setEditingId(newId); // Switch to editing mode for the new product
+//         showToast("Product created successfully. You can now upload images.");
+//       }
+//       fetchProducts(); // Refresh list
+//     } catch (err) {
+//       console.error("Save details failed:", err);
+//       showToast(`Save failed: ${err.message}`, "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   // 🖼️ Handle file selection
+//   function handleFileChange(e) {
+//     setSelectedFiles(e.target.files);
+//   }
+
+//   // ⬆️ Handle image upload
+//   async function handleUploadImages() {
+//     const idToUpload = createdProductId || editingId;
+
+//     if (!idToUpload) {
+//       showToast("Please save product details first.", "warning");
+//       return;
+//     }
+//     if (selectedFiles.length === 0) {
+//       showToast("No files selected to upload.", "warning");
+//       return;
+//     }
+
+//     try {
+//       setLoading(true);
+//       await uploadProductImages(idToUpload, selectedFiles);
+//       showToast("Images uploaded successfully");
+//       setSelectedFiles([]); // Clear selected files after upload
+//       fetchProducts(); // Refresh list to show new images
+//       // You might want to also re-fetch the single product details if needed
+//     } catch (err) {
+//       console.error("Image upload failed:", err);
+//       showToast(`Image upload failed: ${err.message}`, "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   // ➕ Open Add Modal (Existing code)
+//   function openAddModal() {
+//     setEditingId(null);
+//     setForm(emptyProduct);
+//     setSelectedFiles([]);
+//     setCreatedProductId(null);
+//     setManualDiscount(false);
+//     setModalOpen(true);
+//     setTimeout(() => modalBodyRef.current?.scrollTo?.(0, 0), 50);
+//   }
+
+//   // ✏️ Open Edit Modal (Existing code)
+//   async function openEditModal(productId) {
+//     try {
+//       setLoading(true);
+//       const resp = await getProductById(productId);
+//       const p = resp?.data || resp;
+//       const normalized = {
+//         ...emptyProduct,
+//         ...p,
+//         price: Number(p.price || 0),
+//         mrp: Number(p.mrp || 0),
+//         discountPercent: Number(p.discountPercent || 0),
+//         rating: Number(p.rating || 0),
+//         reviewsCount: Number(p.reviewsCount || 0),
+//         stock: Number(p.stock || 0),
+//       };
+//       setForm(normalized);
+//       setEditingId(productId);
+//       setCreatedProductId(productId);
+//       setManualDiscount(Boolean(p?.discountPercent));
+//       setModalOpen(true);
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Failed to fetch product details", "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+//   
+//   // 🧾 Delete product (Existing code)
+//   async function handleDelete(productId) {
+//     if (!window.confirm("Confirm delete this product?")) return;
+//     try {
+//       setLoading(true);
+//       await deleteProduct(productId);
+//       showToast("Product deleted");
+//       fetchProducts();
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Delete failed", "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   // 🗑️ Delete image (Existing code)
+//   async function handleDeleteImage(imageId) {
+//     if (!window.confirm("Delete this image?")) return;
+//     try {
+//       await deleteProductImage(imageId);
+//       showToast("Image deleted");
+//       // Re-fetch current product details to update modal's image list
+//       if (editingId) {
+//         const resp = await getProductById(editingId);
+//         const p = resp?.data || resp;
+//         // Update images in the main products list too
+//         setProducts(prev => prev.map(prod => (prod.id || prod._id) === editingId ? { ...prod, images: p.images } : prod));
+//       }
+//       fetchProducts(); // Refresh list
+//     } catch (err) {
+//       console.error(err);
+//       showToast("Image delete failed", "error");
+//     }
+//   }
+
+//   // 📷 Get images for product (Existing code)
+//   function imagesFor(productId) {
+//     const p = products.find((x) => (x.id || x.product_id || x._id) === productId);
+//     return p?.images || [];
+//   }
+
+//   return (
+//     <div className={styles.productPage}>
+//       <header className={styles.productHeader}>
+//         <h2>Products</h2>
+//         <div className={styles.controls}>
+//           <button onClick={openAddModal} className={styles.primary}>
+//             + Add Product
+//           </button>
+//           <button
+//             onClick={() => setViewMode(viewMode === "table" ? "card" : "table")}
+//             className={styles.secondary}
+//           >
+//             {viewMode === "table" ? "Card View" : "Table View"}
+//           </button>
+//         </div>
+//       </header>
+
+//       {loading && <div className={styles.loading}>Loading...</div>}
+
+//       {/* 🧾 TABLE VIEW */}
+//       {viewMode === "table" && (
+//         <table className={styles.productTable}>
+//           <thead>
+//             <tr>
+//               <th>Image</th>
+//               <th>Name</th>
+//               <th>Category</th>
+//               <th>Price</th>
+//               <th>MRP</th>
+//               <th>Stock</th>
+//               <th>Actions</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {products.length === 0 && (
+//               <tr>
+//                 <td colSpan="7">No products available</td>
+//               </tr>
+//             )}
+//             {products.map((p) => {
+//               const id = p.id || p.product_id || p._id;
+//               const thumb =
+//                 p.images?.[0]?.url || p.image || p.thumbnail || "";
+//               return (
+//                 <tr key={id}>
+//                   <td className={styles.thumbCell}>
+//                     {thumb ? (
+//                       <img src={thumb} alt={p.name} />
+//                     ) : (
+//                       <div className={styles.noThumb}>N/A</div>
+//                     )}
+//                   </td>
+//                   <td>{p.name}</td>
+//                   <td>{p.category_name || "N/A"}</td>
+//                   <td>₹{p.price}</td>
+//                   <td>₹{p.mrp}</td>
+//                   <td>{p.stock}</td>
+//                   <td>
+//                     <button onClick={() => openEditModal(id)}>Edit</button>
+//                     <button
+//                       onClick={() => handleDelete(id)}
+//                       className={styles.danger}
+//                     >
+//                       Delete
+//                     </button>
+//                   </td>
+//                 </tr>
+//               );
+//             })}
+//           </tbody>
+//         </table>
+//       )}
+
+//       {/* 🧩 CARD VIEW */}
+//       {viewMode === "card" && (
+//         <div className={styles.cardGrid}>
+//           {products.map((p) => {
+//             const id = p.id || p.product_id || p._id;
+//             const thumb = p.images?.[0]?.url || p.image || p.thumbnail || "";
+//             return (
+//               <div className={styles.productCard} key={id}>
+//                 <div className={styles.cardMedia}>
+//                   {thumb ? (
+//                     <img src={thumb} alt={p.name} />
+//                   ) : (
+//                     <div className={styles.noThumb}>No Image</div>
+//                   )}
+//                 </div>
+//                 <div className={styles.cardBody}>
+//                   <h3>{p.name}</h3>
+//                   <p className={styles.brand}>{p.brand}</p>
+//                   <p className={styles.price}>
+//                     ₹{p.price}{" "}
+//                     <span className={styles.mrp}>MRP ₹{p.mrp}</span>
+//                   </p>
+//                   <p className={styles.stock}>Stock: {p.stock}</p>
+//                   <div className={styles.cardActions}>
+//                     <button onClick={() => openEditModal(id)}>Edit</button>
+//                     <button
+//                       onClick={() => handleDelete(id)}
+//                       className={styles.danger}
+//                     >
+//                       Delete
+//                     </button>
+//                   </div>
+//                 </div>
+//               </div>
+//             );
+//           })}
+//         </div>
+//       )}
+
+//       {/* 🧮 MODAL */}
+//       {modalOpen && (
+//         <AddProductModal
+//           // Props for AddProductModal
+//           open={modalOpen} // Pass modalOpen as 'open' prop
+//           onClose={() => setModalOpen(false)} // Define onClose handler
+//           form={form}
+//           categories={categories}
+//           editingId={editingId}
+//           createdProductId={createdProductId}
+//           manualDiscount={manualDiscount}
+//           images={imagesFor(editingId || createdProductId)} // Pass the images list
+//           loading={loading}
+
+//           // Handlers (the missing functions)
+//           onChange={onChange} // Form input changes
+//           onSave={handleSaveDetails} // Save product details
+//           onReset={openAddModal} // Reset form to empty
+//           onFileChange={handleFileChange} // Handle file selection
+//           onUploadImages={handleUploadImages} // Handle image upload
+//           handleDeleteImage={handleDeleteImage}
+//           setManualDiscount={setManualDiscount}
+//           resetDiscountAuto={resetDiscountAuto}
+//           modalBodyRef={modalBodyRef}
+//         />
+//       )}
+//     </div>
+//   );
+// }
+
+
+add product css
+/* -------------------- PAGE SHELL -------------------- */
+.productPage {
+  padding: 18px;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: #f7f8fb;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* -------------------- HEADER -------------------- */
+.productHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.productHeader h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #111827;
+}
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+/* -------------------- BUTTONS -------------------- */
+button {
+  cursor: pointer;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all .12s ease;
+}
+.primary {
+  background: #6a0dad;
+  color: white;
+}
+.secondary {
+  background: #eef2ff;
+  color: #3730a3;
+}
+.ghost {
+  background: transparent;
+  color: #374151;
+  border: 1px solid transparent;
+}
+.linkBtn {
+  background: transparent;
+  color: #2563eb;
+  border: none;
+  padding: 4px 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* -------------------- LOADING -------------------- */
+.loading {
+  margin: 12px 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* -------------------- TABLE -------------------- */
+.productTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
+}
+.productTable th,
+.productTable td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  vertical-align: middle;
+}
+.productTable th {
+  background: #fafafa;
+  font-size: 13px;
+  color: #374151;
+}
+
+/* -------------------- THUMB -------------------- */
+.thumbCell img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.noThumb {
+  width: 64px;
+  height: 64px;
+  background: #eef2f7;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* -------------------- CARDS -------------------- */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+.productCard {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 14px rgba(17, 24, 39, 0.06);
+  display: flex;
+  flex-direction: column;
+  transition: transform .12s ease;
+}
+.productCard:hover { transform: translateY(-6px); }
+.cardMedia img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+.cardBody {
+  padding: 12px;
+}
+.cardBody h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #111827;
+}
+.brand {
+  margin: 6px 0 0 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+.price {
+  margin-top: 8px;
+  font-weight: 700;
+  color: #111827;
+}
+.mrp {
+  margin-left: 8px;
+  font-weight: 500;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+.cardActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* -------------------- MODAL / POPUP -------------------- */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2,6,23,0.45);
+  z-index: 1000;
+  padding: 18px;
+}
+.modalContainer {
+  background: #fff;
+  border-radius: 12px;
+  width: 80%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 10000;
+}
+
+/* Generic Header for Add / Update */
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #eef2f6;
+  background: #fff;
+  position: relative;
+  z-index: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+.modalHeader h3 { margin: 0; font-size: 18px; font-weight: 600; color: #111827; }
+.modalHeader .closeBtn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #374151;
+}
+
+/* Body is scrollable */
+.modalBody {
+  padding: 16px 18px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Form layout */
+.section {
+  background: #fafafa;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+}
+.sectionTitle {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #374151;
+}
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (max-width: 820px) { .grid2 { grid-template-columns: 1fr; } }
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.formRow label {
+  font-size: 13px;
+  color: #374151;
+}
+.formRow input[type="text"],
+.formRow input[type="number"],
+.formRow textarea,
+.formRow select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e6edf3;
+  background: #fff;
+  font-size: 14px;
+  outline: none;
+}
+.formRow textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+.hintRow { margin-top: 6px; }
+.muted { color: #6b7280; font-size: 13px; }
+
+/* Images inside form */
+.imgRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.imgThumb {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+.imgThumb img { width: 100%; height: 100%; object-fit: cover; }
+.imgThumb button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(229,57,53,0.95);
+  color: white;
+  border: none;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* Sticky footer for modal */
+.modalFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid #eef2f6;
+  background: #fff;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}
+.footerLeft { display: flex; gap: 8px; align-items: center; }
+.footerRight { display: flex; gap: 8px; align-items: center; }
+
+/* Utilities */
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+/* Toasts */
+.toast {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: white;
+  z-index: 1200;
+  font-weight: 600;
+}
+.toast.success { background: #16a34a; }
+.toast.error { background: #ef4444; }
+.toast.warning { background: #f59e0b; }
+
+

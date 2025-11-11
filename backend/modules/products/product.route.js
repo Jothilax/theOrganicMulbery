@@ -34,13 +34,12 @@ router.put(
   updateProduct
 );
 
-// ✅ Get All Products
-router.get("/getAllProducts", verifyToken, getAllProducts);
+// ✅ Get All Products (Public - customers can view)
+router.get("/getAllProducts", getAllProducts);
 
-// ✅ Get Product by ID
+// ✅ Get Product by ID (Public - customers can view)
 router.get(
   "/getProductById/:id", 
-  verifyToken, 
   validate(productIdSchema), 
   getProductById
 );

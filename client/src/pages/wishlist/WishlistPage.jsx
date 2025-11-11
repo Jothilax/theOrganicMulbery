@@ -1,56 +1,92 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import "./WishlistPage.css";
+import { wishlistService } from "../../services/wishlistService";
+import { cartService } from "../../services/cartService";
 
 const WishlistPage = () => {
+  const navigate = useNavigate();
   const [wishlistItems, setWishlistItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [removingItem, setRemovingItem] = useState(null);
 
   useEffect(() => {
-    // Simulate wishlist fetch
-    const items = [
-      {
-        id: 1,
-        name: "Gold Necklace Set",
-        category: "Necklace",
-        image: "https://via.placeholder.com/300x200?text=Necklace",
-        price: 22000,
-        originalPrice: 26000,
-        rating: 4.6,
-        reviewCount: 120,
-        weight: 18,
-        purity: "22K",
-        addedDate: "2025-10-12",
-      },
-      {
-        id: 2,
-        name: "Diamond Ring",
-        category: "Rings",
-        image: "https://via.placeholder.com/300x200?text=Diamond+Ring",
-        price: 18000,
-        originalPrice: 18000,
-        rating: 4.8,
-        reviewCount: 88,
-        weight: 5,
-        purity: "18K",
-        addedDate: "2025-09-30",
-      },
-    ];
+    const fetchWishlist = async () => {
+      const token = localStorage.getItem('customerToken');
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
-    setWishlistItems(items);
-    const baseUrl = window.location.origin;
-    const wishlistParam = items.map((item) => item.id).join(",");
-    setShareUrl(`${baseUrl}/wishlist?items=${wishlistParam}`);
-  }, []);
+      try {
+        setLoading(true);
+        const response = await wishlistService.getWishlist();
+        if (response.items) {
+          const formattedItems = response.items.map((item) => {
+            const product = item.product;
+            const primaryImage = product?.images?.find(img => img.is_primary) || product?.images?.[0];
+            const imageUrl = primaryImage?.imageUrl || 
+              (primaryImage?.images ? `http://localhost:3000/uploads/products/${primaryImage.images}` : null) ||
+              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23f0f0f0' width='300' height='200'/%3E%3Ctext fill='%23999' font-family='Arial' font-size='14' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EProduct Image%3C/text%3E%3C/svg%3E";
 
-  const handleRemove = (id) => {
-    const updated = wishlistItems.filter((i) => i.id !== id);
-    setWishlistItems(updated);
-    alert("Removed from wishlist!");
+            return {
+              id: item.id,
+              productId: item.product_id,
+              name: product?.name || "Unknown Product",
+              category: product?.category?.category_name || "General",
+              image: imageUrl,
+              price: product?.price || 0,
+              originalPrice: product?.mrp || product?.price || 0,
+              rating: product?.rating || 0,
+              reviewCount: product?.reviewsCount || 0,
+              addedDate: item.addedDate || item.createdAt,
+            };
+          });
+          setWishlistItems(formattedItems);
+          
+          // Generate share URL
+          const baseUrl = window.location.origin;
+          const wishlistParam = formattedItems.map((item) => item.productId).join(",");
+          setShareUrl(`${baseUrl}/wishlist?items=${wishlistParam}`);
+        }
+      } catch (error) {
+        console.error("Error fetching wishlist:", error);
+        if (error.response?.status === 401) {
+          navigate("/login");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWishlist();
+  }, [navigate]);
+
+  const handleRemove = async (wishlistItemId) => {
+    try {
+      setRemovingItem(wishlistItemId);
+      await wishlistService.removeFromWishlist(wishlistItemId);
+      setWishlistItems(wishlistItems.filter((item) => item.id !== wishlistItemId));
+      alert("Removed from wishlist!");
+    } catch (error) {
+      console.error("Error removing from wishlist:", error);
+      alert(error.response?.data?.message || "Failed to remove from wishlist");
+    } finally {
+      setRemovingItem(null);
+    }
   };
 
-  const handleAddToCart = (product) => {
-    alert(`${product.name} added to cart!`);
+  const handleAddToCart = async (product) => {
+    try {
+      await cartService.addToCart(product.productId, 1);
+      alert(`${product.name} added to cart!`);
+      navigate("/cart");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert(error.response?.data?.message || "Failed to add to cart");
+    }
   };
 
   const handleShare = () => {
@@ -71,6 +107,19 @@ const WishlistPage = () => {
   };
 
   const handleCloseModal = () => setShareModalVisible(false);
+
+  if (loading) {
+    return (
+      <div className="wishlist-page">
+        <div className="wishlist-container">
+          <div className="wishlist-header">
+            <h1>💖 My Wishlist</h1>
+            <p>Loading wishlist...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="wishlist-page">
@@ -97,8 +146,12 @@ const WishlistPage = () => {
             <h2>Your wishlist is empty</h2>
             <p>Start browsing and save items you love for later!</p>
             <div className="empty-buttons">
-              <button className="primary">Browse Products</button>
-              <button className="secondary">Go to Home</button>
+              <Link to="/collection" className="primary" style={{ textDecoration: 'none', display: 'inline-block', padding: '10px 20px', margin: '5px' }}>
+                Browse Products
+              </Link>
+              <Link to="/" className="secondary" style={{ textDecoration: 'none', display: 'inline-block', padding: '10px 20px', margin: '5px' }}>
+                Go to Home
+              </Link>
             </div>
           </div>
         ) : (
@@ -106,7 +159,16 @@ const WishlistPage = () => {
             {wishlistItems.map((item) => (
               <div className="wishlist-card" key={item.id}>
                 <div className="card-img">
-                  <img src={item.image} alt={item.name} />
+                  <Link to={`/collectiondetails/${item.productId}`}>
+                    <img 
+                      src={item.image} 
+                      alt={item.name}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23f0f0f0' width='300' height='200'/%3E%3Ctext fill='%23999' font-family='Arial' font-size='14' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EProduct Image%3C/text%3E%3C/svg%3E";
+                      }}
+                    />
+                  </Link>
                   {item.originalPrice > item.price && (
                     <span className="discount">
                       {Math.round(
@@ -120,17 +182,22 @@ const WishlistPage = () => {
                   <button
                     className="remove-btn"
                     onClick={() => handleRemove(item.id)}
+                    disabled={removingItem === item.id}
                   >
-                    ❌
+                    {removingItem === item.id ? "..." : "❌"}
                   </button>
                 </div>
 
                 <div className="card-body">
                   <span className="category">{item.category}</span>
-                  <h3>{item.name}</h3>
-                  <div className="rating">
-                    ⭐ {item.rating} <span>({item.reviewCount} reviews)</span>
-                  </div>
+                  <Link to={`/collectiondetails/${item.productId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <h3>{item.name}</h3>
+                  </Link>
+                  {item.rating > 0 && (
+                    <div className="rating">
+                      ⭐ {item.rating.toFixed(1)} <span>({item.reviewCount} reviews)</span>
+                    </div>
+                  )}
                   <div className="price">
                     ₹{item.price.toLocaleString()}
                     {item.originalPrice > item.price && (
@@ -139,9 +206,6 @@ const WishlistPage = () => {
                       </span>
                     )}
                   </div>
-                  <p className="meta">
-                    {item.weight}g • {item.purity}
-                  </p>
                   <p className="added">
                     Added:{" "}
                     {new Date(item.addedDate).toLocaleDateString("en-IN", {

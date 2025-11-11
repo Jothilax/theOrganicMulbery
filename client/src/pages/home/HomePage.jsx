@@ -1,31 +1,90 @@
-// src/pages/HomePage.jsx
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./HomePage.css";
+import { productService } from "../../services/productService";
+import { categoryService } from "../../services/categoryService";
 
 const HomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [categories, setCategories] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const heroSlides = [
-    { title: "Santos de Cartier", subtitle: "DIAMONDS", description: "Brilliance in every facet", image: "https://via.placeholder.com/1200x600?text=Diamonds", btnText: "EXPLORE" },
-    { title: "HERITAGE", subtitle: "GOLD", description: "Timeless designs in pure gold", image: "https://via.placeholder.com/1200x600?text=Gold", btnText: "EXPLORE GOLD" },
-    { title: "EVERYDAY", subtitle: "GEMS", description: "Elegant pieces for every occasion", image: "https://via.placeholder.com/1200x600?text=Gems", btnText: "EXPLORE GEMS" },
-    { title: "CELEBRATION", subtitle: "JEWELLERY", description: "Moments to treasure", image: "https://via.placeholder.com/1200x600?text=Jewellery", btnText: "EXPLORE CELEBRATIONS" },
-    { title: "TANK CRAFT", subtitle: "CRAFT", description: "Designed after the tanks of WWI battlefields.", image: "https://via.placeholder.com/1200x600?text=Craft", btnText: "DISCOVER TANK" },
+    {
+      title: "Linen and More",
+      subtitle: "The essence of natural fiber",
+      description:
+        "Crafting comfort and elegance through high-quality textiles for homes and hospitality.",
+      image: "https://via.placeholder.com/1200x600?text=Linen+and+More",
+      btnText: "LEARN MORE",
+    },
+    {
+      title: "HoReCa Approach",
+      subtitle: "Textile Solutions for Hospitality",
+      description:
+        "Delivering premium linen and textile products tailored for resorts, hotels, hospitals, and more.",
+      image: "https://via.placeholder.com/1200x600?text=HoReCa+Solutions",
+      btnText: "OUR APPROACH",
+    },
+    {
+      title: "Premium Comfort",
+      subtitle: "Luxury Textile Products",
+      description:
+        "Experience the finest in bed linen, duvets, towels, and more – crafted for comfort and durability.",
+      image: "https://via.placeholder.com/1200x600?text=Premium+Comfort",
+      btnText: "EXPLORE PRODUCTS",
+    },
   ];
 
   const stats = [
-    { icon: "❤️", value: "10,000+", label: "Happy Customers" },
-    { icon: "👑", value: "25+", label: "Years of Excellence" },
-    { icon: "💎", value: "5,000+", label: "Unique Designs" },
-    { icon: "🏆", value: "50+", label: "Awards Won" },
+    { icon: "🏨", value: "200+", label: "Hotels & Resorts Served" },
+    { icon: "🧵", value: "45+", label: "Years of Textile Expertise" },
+    { icon: "🌿", value: "100%", label: "Natural Fiber Quality" },
+    { icon: "🤝", value: "Global", label: "Partnership Network" },
   ];
 
-  const featuredProducts = [
-    { id: 1, name: "Gold Necklace", price: 25000, image: "https://via.placeholder.com/300x300?text=Necklace" },
-    { id: 2, name: "Diamond Ring", price: 48000, image: "https://via.placeholder.com/300x300?text=Ring" },
-    { id: 3, name: "Silver Bracelet", price: 15000, image: "https://via.placeholder.com/300x300?text=Bracelet" },
-  ];
+  // Fetch categories and products on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch categories
+        const categoriesResponse = await categoryService.getAllCategories();
+        if (categoriesResponse.categories) {
+          setCategories(categoriesResponse.categories.filter(cat => cat.is_active !== false));
+        }
+
+        // Fetch products
+        const productsResponse = await productService.getAllProducts();
+        if (productsResponse.data) {
+          // Get first 4 products or products with primary images
+          const products = productsResponse.data
+            .filter(product => product.is_active !== false)
+            .slice(0, 4)
+            .map(product => {
+              const primaryImage = product.images?.find(img => img.is_primary) || product.images?.[0];
+              return {
+                id: product.id,
+                name: product.name,
+                price: `₹${product.price?.toLocaleString() || '0'}`,
+                image: primaryImage?.imageUrl || (primaryImage?.images ? `http://localhost:3000/uploads/products/${primaryImage.images}` : null),
+                category: product.category?.category_name || "General",
+              };
+            });
+          setFeaturedProducts(products);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        // Keep default products on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -50,10 +109,10 @@ const HomePage = () => {
                 <h2>{slide.subtitle}</h2>
                 <p>{slide.description}</p>
                 <div className="hero-buttons">
-                  <Link to="/collection" className="btn btn-dark">
+                  <Link to="/about" className="btn btn-dark">
                     {slide.btnText}
                   </Link>
-                  <button className="btn btn-light">WATCH STORY</button>
+                  <button className="btn btn-light">CONTACT US</button>
                 </div>
                 <div className="hero-dots">
                   {heroSlides.map((_, i) => (
@@ -70,12 +129,23 @@ const HomePage = () => {
         ))}
       </section>
 
+      {/* INTRO SECTION */}
+      <section className="intro">
+        <h2 className="section-title">The Essence of Natural Fiber</h2>
+        <p className="section-subtitle">
+          Over the years, hundreds of families have chosen us for quality home textiles. Our
+          expertise now extends to the HoReCa sector, delivering tailored solutions for hospitality.
+        </p>
+        <div className="center">
+          <Link to="/about" className="btn btn-dark">
+            Learn More
+          </Link>
+        </div>
+      </section>
+
       {/* STATS */}
       <section className="stats">
-        <h2 className="section-title">Our Legacy</h2>
-        <p className="section-subtitle">
-          Crafting timeless jewellery that transcends generations.
-        </p>
+        <h2 className="section-title">Our Legacy in Textiles</h2>
         <div className="stats-grid">
           {stats.map((stat, i) => (
             <div className="stat-card" key={i}>
@@ -89,78 +159,109 @@ const HomePage = () => {
 
       {/* FEATURED PRODUCTS */}
       <section className="featured">
-        <h2 className="section-title">Signature Collection</h2>
+        <h2 className="section-title">Our Products</h2>
         <p className="section-subtitle">
-          Discover jewellery crafted with heritage and modern design.
+          Bringing style, comfort, and functionality to your home and hospitality space.
         </p>
-
-        <div className="product-grid">
-          {featuredProducts.map((p) => (
-            <Link to={`/collectiondetails/${p.id}`} className="product-item" key={p.id}>
-              <div className="product-card">
-                <img src={p.image} alt={p.name} />
-                <h3>{p.name}</h3>
-                <p>₹{p.price.toLocaleString()}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        <div className="center">
-          <Link to="/collection" className="btn btn-dark large">
-            🛍️ View Full Collection
-          </Link>
-        </div>
-      </section>
-
-      {/* GOLD RATE SECTION */}
-      <section className="gold-rate">
-        <div className="gold-grid">
-          <div className="gold-card">
-            <div className="gold-rate-card">
-              <h3>Today's Gold Rate</h3>
-              <p className="gold-price">₹6,500 / gram</p>
-              <p className="gold-subtitle">22K Gold</p>
-            </div>
-          </div>
-          <div className="gold-info">
-            <h3>
-              Why Choose <br />
-              <span>Stellar Gems?</span>
-            </h3>
-            <div className="features">
-              {[
-                { icon: "💎", title: "Certified Quality", desc: "All jewelry is hallmarked and certified for purity" },
-                { icon: "🔄", title: "Lifetime Exchange", desc: "Exchange old jewelry with transparent pricing" },
-                { icon: "🚚", title: "Cosmic Delivery", desc: "Free delivery across the universe" },
-                { icon: "🛡️", title: "Quantum Security", desc: "Advanced protection for all transactions" },
-              ].map((f, i) => (
-                <div className="feature" key={i}>
-                  <div className="feature-icon">{f.icon}</div>
-                  <div>
-                    <h4>{f.title}</h4>
-                    <p>{f.desc}</p>
-                  </div>
+        {loading ? (
+          <div className="product-grid">
+            {[1, 2, 3, 4].map((i) => (
+              <div className="product-item" key={i}>
+                <div className="product-card" style={{ opacity: 0.5 }}>
+                  <div style={{ width: '100%', height: '200px', background: '#f0f0f0' }}></div>
+                  <h3>Loading...</h3>
+                  <p>...</p>
                 </div>
+              </div>
+            ))}
+          </div>
+        ) : featuredProducts.length > 0 ? (
+          <>
+            <div className="product-grid">
+              {featuredProducts.map((p) => (
+                <Link to={`/collectiondetails/${p.id}`} key={p.id} className="product-item" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div className="product-card">
+                    <img 
+                      src={p.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23f0f0f0' width='300' height='300'/%3E%3Ctext fill='%23999' font-family='Arial' font-size='14' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E"} 
+                      alt={p.name}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23f0f0f0' width='300' height='300'/%3E%3Ctext fill='%23999' font-family='Arial' font-size='14' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+                      }}
+                    />
+                    <h3>{p.name}</h3>
+                    <p>{p.price}</p>
+                  </div>
+                </Link>
               ))}
             </div>
+            <div className="center">
+              <Link to="/collection" className="btn btn-dark large">
+                🛍️ Explore All Products
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="center">
+            <p>No products available at the moment.</p>
+            <Link to="/collection" className="btn btn-dark large">
+              🛍️ Explore All Products
+            </Link>
           </div>
+        )}
+      </section>
+
+      {/* WHY CHOOSE US */}
+      <section className="why-us">
+        <h2 className="section-title">Why Choose Us</h2>
+        <div className="why-grid">
+          {[
+            {
+              title: "Marketing",
+              desc: "We market luxury bedding products globally, focusing on the US and EU markets.",
+            },
+            {
+              title: "Partnership",
+              desc: "Collaborating with leading international brands to deliver excellence.",
+            },
+            {
+              title: "Growth",
+              desc: "45 years of textile expertise with strong B2B foundation and customer focus.",
+            },
+            {
+              title: "Sales",
+              desc: "Trusted by renowned 5-star hotels, resorts, and global clients.",
+            },
+            {
+              title: "Design",
+              desc: "In-house design team developing custom textile collections for clients.",
+            },
+            {
+              title: "Know-How",
+              desc: "Decades of experience, advanced sewing techniques, and trend-driven innovation.",
+            },
+          ].map((item, i) => (
+            <div className="why-card" key={i}>
+              <h3>{item.title}</h3>
+              <p>{item.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* FINAL CTA */}
       <section className="final-cta">
-        <div className="cta-icon">✨</div>
-        <h2>Craft Your Moment</h2>
+        <div className="cta-icon">🪡</div>
+        <h2>Crafting Comfort with Care</h2>
         <p>
-          Bespoke designs, impeccable craftsmanship, and a promise of purity.
+          From premium linens to customized hospitality solutions — your comfort is our craft.
         </p>
         <div className="cta-buttons">
           <Link to="/collection" className="btn btn-dark large">
-            ⚡ Start Exploring
+            Explore Products
           </Link>
           <Link to="/contact" className="btn btn-light large">
-            👑 Custom Design
+            Contact Us
           </Link>
         </div>
       </section>

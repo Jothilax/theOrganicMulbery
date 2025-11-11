@@ -2,13 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../../assets/image.png";
 import "./EcommerceHeader.css";
+import { cartService } from "../../services/cartService";
+import { authService } from "../../services/authService";
+import { wishlistService } from "../../services/wishlistService";
 
 const EcommerceHeader = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState(null);
-  const [cartCount, setCartCount] = useState(1);
-  const [wishlistCount, setWishlistCount] = useState(2);
+  const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [loadingCounts, setLoadingCounts] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -25,11 +29,66 @@ const EcommerceHeader = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('customerToken');
+      if (token) {
+        setUser(true);
+        // Fetch cart and wishlist counts
+        fetchCounts();
+      } else {
+        setUser(null);
+        setCartCount(0);
+        setWishlistCount(0);
+      }
+    };
+
+    const fetchCounts = async () => {
+      try {
+        setLoadingCounts(true);
+        // Fetch cart count
+        try {
+          const cartResponse = await cartService.getCart();
+          if (cartResponse.items) {
+            const totalItems = cartResponse.items.reduce((sum, item) => sum + item.quantity, 0);
+            setCartCount(totalItems);
+          }
+        } catch (error) {
+          console.error("Error fetching cart count:", error);
+          setCartCount(0);
+        }
+
+        // Fetch wishlist count
+        try {
+          const wishlistResponse = await wishlistService.getWishlist();
+          if (wishlistResponse.items) {
+            setWishlistCount(wishlistResponse.items.length);
+          }
+        } catch (error) {
+          console.error("Error fetching wishlist count:", error);
+          setWishlistCount(0);
+        }
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+      } finally {
+        setLoadingCounts(false);
+      }
+    };
+
+    checkAuth();
+    
+    // Refresh counts when route changes (e.g., after adding to cart/wishlist)
+    const interval = setInterval(() => {
+      if (localStorage.getItem('customerToken')) {
+        fetchCounts();
+      }
+    }, 10000); // Refresh every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [location.pathname]);
+
   const handleLogout = () => {
-    localStorage.removeItem("userToken");
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/");
+    authService.logout();
   };
 
   return (
@@ -57,7 +116,7 @@ const EcommerceHeader = () => {
           {/* Search + Actions */}
           <div className="header-actions">
             <div className="search-bar">
-              <input type="text" placeholder="Search jewellery..." />
+              <input type="text" placeholder="Search ..." />
               <i className="fa fa-search"></i>
             </div>
             <div className="icon-group">

@@ -50,6 +50,7 @@ import colorRoutes from "./modules/colour/colour.route.js";
 import cartRoutes from "./modules/cart/cart.route.js";
 import orderRoutes from "./modules/order/order.route.js";
 import companyRoutes from "./modules/company/company.route.js";
+import wishlistRoutes from "./modules/wishlist/wishlist.route.js";
 
 // ✅ Use routes
 app.use("/api/users", Users);
@@ -62,6 +63,7 @@ app.use("/api/colors", colorRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/company", companyRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 
 // ✅ Health check
 app.get("/", (req, res) => {

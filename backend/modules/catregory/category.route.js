@@ -18,11 +18,13 @@ import { verifyToken } from "../../middleware/userAuth.js"; // JWT middleware
 
 const router = express.Router();
 
-// All routes protected
+// Protected routes (Admin only)
 router.post("/createCategory", verifyToken, validate(createCategorySchema), createCategory);
-router.get("/getAllCategories", verifyToken, getAllCategories);
-router.get("/getCategoryById/:id", verifyToken, validate(categoryIdSchema), getCategoryById);
 router.put("/updateCategory/:id", verifyToken, validate(updateCategorySchema), updateCategory);
 router.delete("/deleteCategory/:id", verifyToken, validate(categoryIdSchema), deleteCategory);
+
+// Public routes (Customers can view)
+router.get("/getAllCategories", getAllCategories);
+router.get("/getCategoryById/:id", validate(categoryIdSchema), getCategoryById);
 
 export default router;

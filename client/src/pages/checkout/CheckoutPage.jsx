@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./CheckoutPage.css";
+import { cartService } from "../../services/cartService";
+import { orderService } from "../../services/orderService";
+import { authService } from "../../services/authService";
 
 const CheckoutPage = () => {
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const navigate = useNavigate();
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -19,38 +25,142 @@ const CheckoutPage = () => {
     upiId: "",
   });
   const [cartSummary, setCartSummary] = useState({
-    itemCount: 2,
-    subtotal: 121000,
+    itemCount: 0,
+    subtotal: 0,
     discount: 0,
-    tax: 6050,
-    total: 127050,
+    tax: 0,
+    total: 0,
     appliedCoupon: null,
+    items: [],
   });
 
   useEffect(() => {
-    // Cart summary would be fetched from API or context
-    // This is a simplified version
-  }, []);
+    const fetchCartData = async () => {
+      const token = localStorage.getItem('customerToken');
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        // Fetch cart
+        const cartResponse = await cartService.getCart();
+        if (cartResponse.items && cartResponse.items.length > 0) {
+          const items = cartResponse.items;
+          const subtotal = cartResponse.total || items.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+          const tax = subtotal * 0.05;
+          const total = subtotal + tax;
+
+          setCartSummary({
+            itemCount: items.length,
+            subtotal,
+            discount: 0,
+            tax,
+            total,
+            appliedCoupon: null,
+            items,
+          });
+        } else {
+          // Cart is empty
+          navigate("/cart");
+        }
+
+        // Fetch user profile to pre-fill form
+        try {
+          const profileResponse = await authService.getProfile();
+          if (profileResponse.customer) {
+            const customer = profileResponse.customer;
+            setFormData(prev => ({
+              ...prev,
+              firstName: customer.name?.split(' ')[0] || "",
+              lastName: customer.name?.split(' ').slice(1).join(' ') || "",
+              email: customer.email || "",
+              address: customer.address || "",
+              city: customer.city || "",
+              state: customer.state || "",
+              zipCode: customer.pincode || "",
+            }));
+          }
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        }
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+        if (error.response?.status === 401) {
+          navigate("/login");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCartData();
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const orderData = {
-      ...formData,
-      paymentMethod,
-      cartSummary,
-      orderDate: new Date().toISOString(),
-      orderId: `ORD-${Date.now()}`,
-    };
+    if (cartSummary.itemCount === 0) {
+      alert("Your cart is empty");
+      return;
+    }
 
-    console.log("Order submitted:", orderData);
-    // Clear cart - would be handled by cart service/API
-    alert("Order placed successfully! (Demo)");
+    try {
+      setSubmitting(true);
+
+      // Build address string
+      const addressParts = [
+        formData.address,
+        formData.city,
+        formData.state,
+        formData.zipCode,
+      ].filter(Boolean);
+      const fullAddress = addressParts.join(", ");
+
+      // Map payment method
+      let paymentMethodMapping = "COD";
+      if (paymentMethod === "card") {
+        paymentMethodMapping = "CARD";
+      } else if (paymentMethod === "upi") {
+        paymentMethodMapping = "UPI";
+      } else if (paymentMethod === "paypal") {
+        paymentMethodMapping = "PAYPAL";
+      }
+
+      // Create order
+      const orderResponse = await orderService.createOrder(
+        paymentMethodMapping,
+        fullAddress
+      );
+
+      if (orderResponse.order) {
+        alert(`Order placed successfully! Order ID: ${orderResponse.order.id}`);
+        navigate("/profile");
+      } else {
+        alert("Order placed successfully!");
+        navigate("/profile");
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      alert(error.response?.data?.message || "Failed to place order. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="checkout-empty">
+        <h2>Loading checkout...</h2>
+      </div>
+    );
+  }
 
   if (cartSummary.itemCount === 0) {
     return (
@@ -115,6 +225,16 @@ const CheckoutPage = () => {
           <h2>Payment Information</h2>
 
           <div className="payment-options">
+            <label>
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="COD"
+                checked={paymentMethod === "COD"}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              />
+              Cash on Delivery (COD)
+            </label>
             <label>
               <input
                 type="radio"
@@ -189,14 +309,31 @@ const CheckoutPage = () => {
             </div>
           )}
 
-          <button type="submit" className="btn-primary">
-            Place Order - ₹{cartSummary.total.toFixed(2)}
+          <button type="submit" className="btn-primary" disabled={submitting}>
+            {submitting ? "Placing Order..." : `Place Order - ₹${cartSummary.total.toFixed(2)}`}
           </button>
         </form>
 
         {/* Order Summary */}
         <div className="order-summary">
           <h2>Order Summary</h2>
+          
+          {cartSummary.items && cartSummary.items.length > 0 && (
+            <div style={{ marginBottom: '15px' }}>
+              {cartSummary.items.map((item, index) => (
+                <div key={index} style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  padding: '10px 0',
+                  borderBottom: index < cartSummary.items.length - 1 ? '1px solid #eee' : 'none'
+                }}>
+                  <span>{item.product?.name || 'Product'} x {item.quantity}</span>
+                  <span>₹{item.subtotal?.toLocaleString() || '0'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {cartSummary.appliedCoupon && (
             <div className="coupon-box">
               <span>🎁 {cartSummary.appliedCoupon.code}</span>
@@ -222,7 +359,7 @@ const CheckoutPage = () => {
           </div>
 
           <div className="summary-line">
-            <span>Tax</span>
+            <span>Tax (5%)</span>
             <span>₹{cartSummary.tax.toFixed(2)}</span>
           </div>
 

@@ -1,5 +1,6 @@
 import Cart from "./cart.model.js";
 import Product from "../products/product.model.js";
+import ProductImage from "../products/productImg.model.js";
 
 /**
  * Add product to user's cart.
@@ -41,7 +42,20 @@ export const getCart = async (req, res) => {
 
     const items = await Cart.findAll({
       where: { cust_id },
-      include: [{ model: Product }],
+      include: [
+        {
+          model: Product,
+          include: [
+            {
+              model: ProductImage,
+              as: "images",
+              attributes: ["id", "images", "alt_text", "is_primary", "is_active"],
+              where: { is_active: true },
+              required: false,
+            },
+          ],
+        },
+      ],
     });
 
     let total = 0;
@@ -49,6 +63,18 @@ export const getCart = async (req, res) => {
       const price = item.Product?.price || 0;
       const subtotal = price * item.quantity;
       total += subtotal;
+
+      // Format product images with full URLs
+      const productImages = item.Product?.images || [];
+      const formattedImages = productImages
+        .filter(img => img.is_active !== false)
+        .map((img) => {
+          const imgData = img.toJSON ? img.toJSON() : img;
+          return {
+            ...imgData,
+            imageUrl: `${req.protocol}://${req.get("host")}/uploads/products/${imgData.images}`,
+          };
+        });
 
       return {
         id: item.id,
@@ -61,6 +87,7 @@ export const getCart = async (req, res) => {
               price: item.Product.price,
               brand: item.Product.brand,
               stock: item.Product.stock,
+              images: formattedImages,
             }
           : null,
         subtotal,

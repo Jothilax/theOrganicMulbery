@@ -12,7 +12,7 @@ import ForgotPasswordPage from "./pages/forgetpassword/ForgotPasswordPage"
 import ResetPasswordPage from "./pages/resetpassword/ResetPasswordPage"
 import LoginPage from "./pages/login/LoginPage"
 import OtpVerificationPage from "./pages/otp/OtpVerificationPage"
-import RegisterPage from "./pages/registration/RegisterPage"
+// import RegisterPage from "./pages/registration/RegisterPage"
 import ProfilePage from "./pages/profile/ProfilePage"
 import EcommerceHeader from "./components/header/EcommerceHeader"
 import EcommerceFooter from "./components/footer/EcommerceFooter"
@@ -34,7 +34,7 @@ function App() {
         <Route path="/resetpassword" element={<ResetPasswordPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/otpverify" element={<OtpVerificationPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        {/* <Route path="/register" element={<RegisterPage />} /> */}
         <Route path="/profile" element={<ProfilePage />} />
       </Routes>
       <EcommerceFooter/>

@@ -36,7 +36,7 @@ const OtpVerificationPage = () => {
   const handleVerify = (e) => {
     e.preventDefault();
     // In real app, verify OTP from backend
-    navigate("/resetpassword");
+    navigate("/profile");
   };
 
   const handleResend = () => {

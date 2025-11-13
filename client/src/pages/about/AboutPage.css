@@ -1,206 +1,272 @@
+/* /* ===========================
+   Linen and More - About Page
+   =========================== */
+
 .about-page {
   position: relative;
-  min-height: 100vh;
-  background-color: #fff;
   overflow: hidden;
+  background-color: #fffaf4;
+  color: #3a2e2e;
   font-family: "Poppins", sans-serif;
-  color: #333;
+  margin-top: 10vh;
 }
 
-/* Background blurred circles */
+/* -------------------------
+   Background Circles (Soft)
+   ------------------------- */
 .bg-circle {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
   z-index: 0;
+  filter: blur(100px);
+  opacity: 0.3;
 }
 
 .bg-yellow-light {
-  right: -120px;
-  top: 180px;
-  width: 380px;
-  height: 380px;
-  background-color: rgba(255, 230, 150, 0.6);
+  width: 400px;
+  height: 400px;
+  background: #e4c690;
+  top: -150px;
+  right: -150px;
 }
 
 .bg-yellow-lighter {
-  left: -120px;
-  top: 480px;
-  width: 380px;
-  height: 380px;
-  background-color: rgba(255, 240, 180, 0.5);
+  width: 300px;
+  height: 300px;
+  background: #f5e6c3;
+  bottom: -100px;
+  left: -100px;
 }
 
-/* Container */
+/* -------------------------
+   Container and Sections
+   ------------------------- */
 .about-container {
   position: relative;
   z-index: 1;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 80px 20px;
+  padding: 80px 10%;
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
 }
 
-/* Header */
+/* -------------------------
+   Header Section
+   ------------------------- */
 .about-header {
   text-align: center;
-  margin-bottom: 80px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .about-header h1 {
-  font-size: 40px;
+  font-size: 2.8rem;
+  color: #2a1e1e;
   font-weight: 700;
-  color: #111;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
 }
 
 .about-header p {
-  font-size: 18px;
-  color: #666;
-  max-width: 600px;
-  margin: 0 auto;
+  font-size: 1.1rem;
+  color: #5c4a4a;
+  line-height: 1.6;
 }
 
-/* Heritage Section */
+/* -------------------------
+   Heritage Section
+   ------------------------- */
 .about-heritage {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 40px;
-  margin-bottom: 80px;
 }
 
-@media (min-width: 992px) {
-  .about-heritage {
-    grid-template-columns: 1fr 1fr;
-  }
+.heritage-image {
+  flex: 1 1 40%;
 }
 
 .heritage-image img {
   width: 100%;
-  height: 320px;
-  object-fit: cover;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transition: transform 0.5s ease;
+}
+
+.heritage-image img:hover {
+  transform: scale(1.03);
+}
+
+.heritage-content {
+  flex: 1 1 55%;
 }
 
 .heritage-content h2 {
-  font-size: 30px;
-  margin-bottom: 15px;
-  color: #111;
+  font-size: 2rem;
+  color: #2a1e1e;
+  margin-bottom: 20px;
 }
 
 .heritage-content p {
-  color: #555;
+  font-size: 1rem;
   line-height: 1.7;
   margin-bottom: 15px;
+  color: #534848;
 }
 
 .btn-yellow {
   display: inline-block;
-  background-color: #f7a600;
+  background: #c8a951;
   color: #fff;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 30px;
   text-decoration: none;
-  transition: background 0.3s ease;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 .btn-yellow:hover {
-  background-color: #e69800;
+  background: #b49240;
+  transform: translateY(-3px);
 }
 
-/* Values Section */
+/* -------------------------
+   Values Section
+   ------------------------- */
 .about-values {
   text-align: center;
-  margin-bottom: 80px;
 }
 
 .about-values h2 {
-  font-size: 30px;
-  color: #111;
+  font-size: 2rem;
+  color: #2a1e1e;
   margin-bottom: 40px;
 }
 
 .values-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 30px;
-}
-
-@media (min-width: 768px) {
-  .values-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
 }
 
 .value-card {
-  padding: 20px;
-  text-align: center;
+  background: #fff;
+  border-radius: 16px;
+  padding: 30px 25px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.value-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 }
 
 .value-icon {
-  width: 80px;
-  height: 80px;
-  background-color: #fff6cc;
-  border-radius: 50%;
-  font-size: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 15px;
+  font-size: 2rem;
+  margin-bottom: 15px;
+  color: #c8a951;
 }
 
 .value-card h3 {
-  font-size: 20px;
-  color: #111;
-  margin-bottom: 8px;
+  font-size: 1.3rem;
+  color: #3a2e2e;
+  margin-bottom: 10px;
 }
 
 .value-card p {
-  color: #555;
+  font-size: 0.95rem;
+  color: #5b5050;
   line-height: 1.6;
 }
 
-/* Visit Section */
+/* -------------------------
+   Collections Section
+   ------------------------- */
+.about-collections {
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.about-collections h2 {
+  font-size: 2rem;
+  color: #2a1e1e;
+  margin-bottom: 20px;
+}
+
+.about-collections p {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #534848;
+  margin-bottom: 15px;
+}
+
+/* -------------------------
+   Mission Section
+   ------------------------- */
+.about-mission {
+  background: #fdf8ed;
+  border-radius: 20px;
+  padding: 50px 40px;
+  text-align: center;
+}
+
+.about-mission h2 {
+  font-size: 2rem;
+  color: #2a1e1e;
+  margin-bottom: 15px;
+}
+
+.about-mission p {
+  font-size: 1rem;
+  color: #4f4343;
+  line-height: 1.7;
+}
+
+/* -------------------------
+   Visit / Contact Section
+   ------------------------- */
 .about-visit {
-  background-color: #f9f9f9;
-  padding: 50px;
-  border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
 }
 
 .about-visit h2 {
-  text-align: center;
-  font-size: 30px;
-  color: #111;
-  margin-bottom: 40px;
-}
-
-.visit-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 30px;
+  font-size: 2rem;
+  color: #2a1e1e;
   margin-bottom: 30px;
 }
 
-@media (min-width: 768px) {
-  .visit-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+.visit-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 40px;
+  text-align: left;
+}
+
+.visit-info,
+.visit-why {
+  flex: 1 1 300px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .visit-info h3,
 .visit-why h3 {
-  font-size: 20px;
-  color: #111;
-  margin-bottom: 10px;
+  color: #3a2e2e;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
 }
 
-.visit-info p,
-.visit-why ul li {
-  color: #555;
-  line-height: 1.6;
-  margin-bottom: 8px;
+.visit-info p {
+  color: #5c4a4a;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
 }
 
 .visit-why ul {
@@ -208,13 +274,46 @@
   padding: 0;
 }
 
-.visit-why ul li::before {
-  content: "• ";
-  color: #f7a600;
+.visit-why li {
+  padding-left: 25px;
+  position: relative;
+  margin-bottom: 10px;
+  color: #5b5050;
+  line-height: 1.5;
+}
+
+.visit-why li::before {
+  content: "✔";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #c8a951;
   font-weight: bold;
 }
 
 .visit-button {
-  text-align: center;
   margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .about-container {
+    padding: 60px 5%;
+  }
+
+  .heritage-content h2,
+  .about-values h2,
+  .about-collections h2,
+  .about-mission h2,
+  .about-visit h2 {
+    font-size: 1.7rem;
+  }
+
+  .about-header h1 {
+    font-size: 2.2rem;
+  }
+
+  .heritage-image,
+  .heritage-content {
+    flex: 1 1 100%;
+  }
 }

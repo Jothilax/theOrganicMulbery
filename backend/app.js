@@ -86,7 +86,7 @@ app.listen(PORT, async () => {
   try {
     await sequelize.sync();
     console.log("✅ Database synchronized");
-     await seedDatabase(); // seed admin only if needed
+    await seedDatabase(); // seed admin only if needed
   } catch (error) {
     console.error("❌ Error synchronizing database:", error);
   }

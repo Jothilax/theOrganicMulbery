@@ -283,6 +283,7 @@
 
 // export default RegisterPage;
 
+<<<<<<< HEAD
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -388,3 +389,5 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+=======
+>>>>>>> 5832e0405714e124cb04885b398c49140af67d2a

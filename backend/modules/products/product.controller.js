@@ -71,7 +71,13 @@ export const createProduct = async (req, res) => {
 
     return res.status(201).json({ message: "Product created successfully", product: json });
   } catch (error) {
-    await transaction.rollback();
+    // await transaction.rollback();
+    // console.error("Error creating product:", error);
+    // return res.status(500).json({ message: "Failed to create product", error: error.message });
+
+    if (transaction && !transaction.finished) {
+      try { await transaction.rollback(); } catch (rbErr) { console.warn('Rollback failed:', rbErr.message); }
+    }
     console.error("Error creating product:", error);
     return res.status(500).json({ message: "Failed to create product", error: error.message });
   }

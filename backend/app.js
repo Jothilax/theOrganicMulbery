@@ -6,6 +6,10 @@ import session from "express-session";
 import sequelize from "./config/db.js";
 import { seedDatabase } from "./utils/seedAdmin.js";
 import "./modules/associations/index.js"; // 👈 load associations first
+import http from "http"; // 👈 added for Socket.IO
+import { initSocket } from "./middleware/socket.js"; // 👈 custom socket handler
+
+
 
 dotenv.config();
 
@@ -51,6 +55,7 @@ import cartRoutes from "./modules/cart/cart.route.js";
 import orderRoutes from "./modules/order/order.route.js";
 import companyRoutes from "./modules/company/company.route.js";
 import wishlistRoutes from "./modules/wishlist/wishlist.route.js";
+import trackingRoutes from "./modules/trackingevent/tracking.routes.js";
 
 // ✅ Use routes
 app.use("/api/users", Users);
@@ -64,6 +69,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/tracking", trackingRoutes);
 
 // ✅ Health check
 app.get("/", (req, res) => {
@@ -72,6 +78,9 @@ app.get("/", (req, res) => {
 
 // ✅ Start server
 const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
+initSocket(server); // 👈 initialize WebSocket
+
 app.listen(PORT, async () => {
   console.log(`✅ Server is running on port ${PORT}`);
   try {

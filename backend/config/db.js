@@ -1,24 +1,43 @@
-import { Sequelize } from "sequelize";
-import dotenv from "dotenv";
-dotenv.config();
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    host: process.env.DB_HOST,
-    dialect: "mysql",
-  }
-);      
+// import { Sequelize } from "sequelize";
+// import dotenv from "dotenv";
+// dotenv.config();
+// const sequelize = new Sequelize(
+//   process.env.DB_NAME,
+//   process.env.DB_USER,
+//   process.env.DB_PASSWORD,
+//   {
+//     host: process.env.DB_HOST,
+//     dialect: "mysql",
+//   }
+// );      
 
-sequelize.authenticate()
+// sequelize.authenticate()
+//   .then(() => {
+//     console.log("Database connection has been established successfully.");
+//   })
+//   .catch((err) => {
+//     console.error("Unable to connect to the database:", err);
+//   }
+// );
+
+// export default sequelize;
+// // mysql://root:@localhost:3306/onlineshopping
+
+import { Sequelize } from "sequelize";
+
+const sequelize = new Sequelize("onlineshop", "root", "Sanjay@1218", {
+  host: "localhost",
+  dialect: "mysql",
+  port: 3306,
+});
+
+sequelize
+  .authenticate()
   .then(() => {
-    console.log("Database connection has been established successfully.");
+    console.log("✅ Database connection has been established successfully.");
   })
   .catch((err) => {
-    console.error("Unable to connect to the database:", err);
-  }
-);
+    console.error("❌ Unable to connect to the database:", err);
+  });
 
 export default sequelize;
-//mysql://root:@localhost:3306/onlineshopping
